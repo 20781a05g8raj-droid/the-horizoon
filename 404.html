@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>404 - Horizon Not Found | The Horizoon</title>
+  <meta name="description" content="The page you are looking for has moved or does not exist. Explore our homepage or search our lifestyle and wellness articles.">
+
+  <link rel="icon" type="image/png" href="assets/images/logo.png">
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/responsive.css">
+
+  <style>
+    .not-found-wrapper {
+      min-height: 70vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 5rem 1.5rem;
+    }
+    .not-found-code {
+      font-size: clamp(5rem, 10vw, 8rem);
+      font-family: var(--font-serif);
+      font-weight: 700;
+      color: var(--color-primary);
+      line-height: 1;
+      margin-bottom: 0.5rem;
+    }
+    .not-found-title {
+      font-size: clamp(1.75rem, 3vw, 2.5rem);
+      margin-bottom: 1rem;
+    }
+    .not-found-desc {
+      font-size: 1.1rem;
+      color: var(--color-text-muted);
+      max-width: 500px;
+      margin: 0 auto 2rem auto;
+    }
+    .not-found-search {
+      width: 100%;
+      max-width: 440px;
+      margin-bottom: 2rem;
+    }
+    .not-found-links {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="site-header" id="site-header">
+    <div class="container header-container">
+      <a href="index.html" class="site-logo" aria-label="The Horizoon Home">
+        <img src="assets/images/logo.png" alt="The Horizoon - Fresh Perspectives Every Day">
+      </a>
+      <nav class="nav-menu">
+        <a href="index.html" class="nav-link">Home</a>
+        <a href="blog.html" class="nav-link">Categories</a>
+        <a href="about.html" class="nav-link">About</a>
+        <a href="blog.html" class="nav-link">Blog</a>
+        <a href="contact.html" class="nav-link">Contact</a>
+      </nav>
+      <div class="header-actions">
+        <a href="index.html" class="btn btn-primary btn-sm">Return Home</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="not-found-wrapper">
+    <div class="not-found-code">404</div>
+    <h1 class="not-found-title">A New Horizon Awaits</h1>
+    <p class="not-found-desc">
+      It seems the path you followed has shifted beyond the horizon. Let's guide you back to inspiring ground.
+    </p>
+
+    <div class="not-found-search">
+      <div class="search-box-trigger" style="min-width: 100%; justify-content: center; padding: 0.75rem 1.25rem;">
+        <span>Click to search all articles...</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+      </div>
+    </div>
+
+    <div class="not-found-links">
+      <a href="index.html" class="btn btn-primary">Back to Homepage</a>
+      <a href="blog.html" class="btn btn-outline">Explore All Stories</a>
+      <a href="category.html?cat=travel" class="btn btn-outline">Travel Guides</a>
+      <a href="category.html?cat=health" class="btn btn-outline">Wellness & Health</a>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-bottom" style="border: none; padding-top: 0;">
+        <div class="footer-copyright">© 2026 The Horizoon. All rights reserved.</div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Search Modal -->
+  <div class="search-modal-backdrop" id="search-modal-backdrop" role="dialog" aria-modal="true">
+    <div class="search-modal-dialog">
+      <div class="search-modal-header">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--color-primary);"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        <input type="text" id="search-modal-input" class="search-modal-input" placeholder="Search articles...">
+        <button id="search-modal-close" class="search-modal-close"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+      </div>
+      <div class="search-modal-results" id="search-modal-results"></div>
+    </div>
+  </div>
+
+  <div id="site-toast" class="toast-notification"></div>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

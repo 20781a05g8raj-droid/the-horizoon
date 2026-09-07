@@ -1,0 +1,71 @@
+# The Horizoon 🌅
+> **Fresh Perspectives Every Day** — A modern, responsive lifestyle and wellness editorial blog platform.
+
+![The Horizoon Logo](assets/images/logo.png)
+
+## Overview
+**The Horizoon** is a production-grade editorial website built for mindful living, slow travel, healthy culinary nutrition, deep work focus, and intentional rest. Designed with an elegant, responsive aesthetic matching clean editorial typography, warm palettes, and navy blue brand identity (`#0B5A8A`).
+
+---
+
+## 🌟 Key Features
+
+- **Replicated Editorial Layout**: Faithfully structured matching modern lifestyle publications:
+  - Sticky header with category dropdowns, live search modal, and bookmark badge.
+  - Interactive two-column Hero section with 01–03 slide carousel and mini latest headlines.
+  - 8-category icon explorer strip (*Lifestyle, Travel, Food, Health, Productivity, Technology, Personal Finance, Inspiration*).
+  - Two-column Featured Article section with handwritten overlay (`"A Healthier Happier You"`).
+  - 4-column numbered Trending Now grid.
+  - Full-width dark navy Newsletter banner.
+  - 4-column Latest Articles grid.
+  - Complete, accessible footer.
+- **6 Full Original SEO-Optimized Articles** (1,200–1,400+ words each) across Travel, Food, Health, Productivity, Technology, and Lifestyle.
+  - Includes internal links, 3–5 high-authority external citations (.gov, .edu, academic health portals), reading time, author bios, and JSON-LD Article structured data.
+- **Dedicated Pages**:
+  - `index.html` — Homepage
+  - `blog.html` — Archive with live search, 8 category filter pills, sorting, and pagination
+  - `post.html` — Single post template with dynamic TOC, reading progress bar, social share, and interactive comments
+  - `category.html` — Category landing page for all 8 categories
+  - `newsletter.html` — Dedicated Sunday Briefing newsletter subscription page with reader testimonials
+  - `about.html` — Brand story, core values, and editorial team
+  - `contact.html` — Working contact form with validation, success modal, and interactive FAQ accordion
+  - `privacy.html` — Privacy policy and data protection terms
+  - `404.html` — Branded 404 error page
+  - `sitemap.xml` & `robots.txt` — Search engine crawler indexing
+- **Interactive Functionality**:
+  - Live search modal (`/` or `Ctrl+K`).
+  - Saved articles drawer with `localStorage` persistence.
+  - Working newsletter subscription engine with toast notifications.
+  - Dynamic Table of Contents with scroll-spy highlighting.
+  - Working reader discussion / comment submission system.
+
+---
+
+## 🚀 Getting Started
+
+No build tools or bundlers required to run. Open with any browser or static web server:
+
+```bash
+# Using Node.js:
+npx serve .
+
+# Or using Python:
+python -m http.server 3000
+```
+
+Then visit `http://localhost:3000` in your web browser.
+
+---
+
+## 🎨 Brand Guidelines
+- **Primary Navy**: `#0B5A8A`
+- **Deep Midnight Navy**: `#073552`
+- **Charcoal Text**: `#141A20`
+- **Editorial Serif**: *Playfair Display*
+- **Interface Sans**: *Plus Jakarta Sans*
+- **Handwritten Script**: *Caveat*
+
+---
+
+## 📄 License
+© 2026 The Horizoon. All rights reserved.

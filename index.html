@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Horizoon | Fresh Perspectives Every Day - Lifestyle & Wellness Blog</title>
+  <meta name="description" content="Discover practical tips, inspiring stories, and fresh ideas to help you live a healthier, happier, and more intentional life. Explore wellness, travel, mindful habits, and healthy recipes.">
+  <meta name="keywords" content="wellness, lifestyle, mindfulness, healthy meals, productivity, solo travel, digital minimalism, intentional living">
+  <meta name="author" content="The Horizoon Editorial Team">
+  <link rel="canonical" href="https://thehorizoon.com/">
+
+  <!-- Open Graph / Social Meta -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="The Horizoon | Fresh Perspectives Every Day">
+  <meta property="og:description" content="Practical tips, inspiring stories, and fresh ideas for a healthier, happier life.">
+  <meta property="og:image" content="assets/images/featured-mindfulness.jpg">
+  <meta property="og:url" content="https://thehorizoon.com/">
+  
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="The Horizoon | Fresh Perspectives Every Day">
+  <meta name="twitter:description" content="Practical tips, inspiring stories, and fresh ideas for a healthier, happier life.">
+  <meta name="twitter:image" content="assets/images/featured-mindfulness.jpg">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="assets/images/logo.png">
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/responsive.css">
+
+  <!-- Structured Data (JSON-LD) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "The Horizoon",
+    "url": "https://thehorizoon.com",
+    "description": "Fresh Perspectives Every Day - Lifestyle & Wellness Blog",
+    "publisher": {
+      "@type": "Organization",
+      "name": "The Horizoon",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://thehorizoon.com/assets/images/logo.png"
+      }
+    },
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": "https://thehorizoon.com/blog.html?q={search_term_string}",
+      "query-input": "required name=search_term_string"
+    }
+  }
+  </script>
+</head>
+<body>
+
+  <!-- ========================================================================
+       Header / Navbar (Exact match to reference layout)
+       ======================================================================== -->
+  <header class="site-header" id="site-header">
+    <div class="container header-container">
+      
+      <!-- Brand Logo -->
+      <a href="index.html" class="site-logo" aria-label="The Horizoon Home">
+        <img src="assets/images/logo.png" alt="The Horizoon - Fresh Perspectives Every Day">
+      </a>
+
+      <!-- Main Navigation -->
+      <nav class="nav-menu" aria-label="Primary Navigation">
+        <a href="index.html" class="nav-link active">Home</a>
+        
+        <!-- Categories Dropdown -->
+        <div class="nav-item has-dropdown">
+          <a href="blog.html" class="nav-link" aria-haspopup="true" aria-expanded="false">
+            Categories
+            <svg class="dropdown-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </a>
+          <div class="nav-dropdown" role="menu">
+            <a href="category.html?cat=lifestyle" class="dropdown-link" role="menuitem">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>
+              Lifestyle
+            </a>
+            <a href="category.html?cat=travel" class="dropdown-link" role="menuitem">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg>
+              Travel
+            </a>
+            <a href="category.html?cat=food" class="dropdown-link" role="menuitem">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 2v6a3 3 0 0 1-3 3 3 3 0 0 1-3-3V2"/><path d="M15 2v10"/><path d="M12 12v8"/><path d="M6 2v20"/><path d="M6 7h4a2 2 0 0 0 2-2V2"/></svg>
+              Food
+            </a>
+            <a href="category.html?cat=health" class="dropdown-link" role="menuitem">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+              Health
+            </a>
+            <a href="category.html?cat=productivity" class="dropdown-link" role="menuitem">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+              Productivity
+            </a>
+            <a href="category.html?cat=technology" class="dropdown-link" role="menuitem">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="12" x="3" y="4" rx="2"/><line x1="2" y1="20" x2="22" y2="20"/></svg>
+              Technology
+            </a>
+            <a href="category.html?cat=personal-finance" class="dropdown-link" role="menuitem">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/></svg>
+              Personal Finance
+            </a>
+            <a href="category.html?cat=inspiration" class="dropdown-link" role="menuitem">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+              Inspiration
+            </a>
+          </div>
+        </div>
+
+        <a href="about.html" class="nav-link">About</a>
+        <a href="blog.html" class="nav-link">Blog</a>
+        <a href="contact.html" class="nav-link">Contact</a>
+      </nav>
+
+      <!-- Header Actions: Search, Saved Drawer, Subscribe CTA -->
+      <div class="header-actions">
+        <!-- Live Search Bar Trigger -->
+        <button class="search-box-trigger" aria-label="Search articles">
+          <span>Search articles, ideas, topics...</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+        </button>
+
+        <!-- Saved Articles Bookmark Trigger -->
+        <button class="saved-trigger-btn" id="saved-trigger-btn" title="Saved Articles" aria-label="View Saved Articles">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+          </svg>
+          <span class="saved-badge" style="display: none;">0</span>
+        </button>
+
+        <!-- Subscribe CTA Button -->
+        <a href="#newsletter-section" class="btn btn-primary btn-sm">Subscribe</a>
+
+        <!-- Mobile Menu Hamburger -->
+        <button class="mobile-menu-btn" id="mobile-menu-btn" aria-label="Open mobile menu">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- ========================================================================
+       Hero Section (Two-column layout matching reference screenshot)
+       ======================================================================== -->
+  <section class="hero-section">
+    <div class="container hero-grid">
+      
+      <!-- Left Column: Hero Slider Card -->
+      <div class="hero-main-card" id="hero-main-card">
+        <img src="assets/images/hero-main.jpg" alt="Morning sunshine on desk" class="hero-bg">
+        <div class="hero-overlay"></div>
+
+        <div class="hero-content">
+          <span class="hero-eyebrow">LIFESTYLE • WELLNESS • A BRIGHTER YOU</span>
+          <h1 class="hero-title">Small Changes Make a Big Difference</h1>
+          <p class="hero-description">Practical tips, inspiring stories and fresh ideas to help you live a healthier, happier and more meaningful life.</p>
+          <a href="blog.html" class="hero-btn">Explore Articles →</a>
+        </div>
+
+        <div class="hero-footer-bar">
+          <div class="hero-slider-nav">
+            <div class="hero-progress-track">
+              <div class="hero-progress-fill"></div>
+            </div>
+            <span class="hero-slide-num active" data-slide="0">01</span>
+            <span class="hero-slide-num" data-slide="1">02</span>
+            <span class="hero-slide-num" data-slide="2">03</span>
+          </div>
+          <div class="hero-mug-caption handwriting">Good Ideas Brighter Days ♡</div>
+        </div>
+      </div>
+
+      <!-- Right Column: Vertical Stack of 4 Latest Headlines -->
+      <div class="hero-headlines-stack">
+        
+        <!-- Card 1 -->
+        <a href="post.html?slug=solo-travel-guide-2026" class="headline-card">
+          <div class="headline-thumb">
+            <img src="assets/images/thumb-travel-fjords.jpg" alt="Travel destinations">
+          </div>
+          <div class="headline-meta">
+            <span class="headline-category">TRAVEL</span>
+            <h3 class="headline-title">10 Breathtaking Destinations You Must Visit in 2026</h3>
+            <span class="headline-date">Sep 6, 2026</span>
+          </div>
+        </a>
+
+        <!-- Card 2 -->
+        <a href="post.html?slug=healthy-meals-for-busy-people" class="headline-card">
+          <div class="headline-thumb">
+            <img src="assets/images/thumb-food-salad.jpg" alt="Healthy delicious meals">
+          </div>
+          <div class="headline-meta">
+            <span class="headline-category">FOOD</span>
+            <h3 class="headline-title">Healthy and Delicious Meals for Busy People</h3>
+            <span class="headline-date">Sep 4, 2026</span>
+          </div>
+        </a>
+
+        <!-- Card 3 -->
+        <a href="post.html?slug=deep-work-focus-habits" class="headline-card">
+          <div class="headline-thumb">
+            <img src="assets/images/thumb-desk-focus.jpg" alt="Desk productivity">
+          </div>
+          <div class="headline-meta">
+            <span class="headline-category">PRODUCTIVITY</span>
+            <h3 class="headline-title">How to Stay Focused in a Distracted World</h3>
+            <span class="headline-date">Sep 2, 2026</span>
+          </div>
+        </a>
+
+        <!-- Card 4 -->
+        <a href="post.html?slug=power-of-intentional-rest" class="headline-card">
+          <div class="headline-thumb">
+            <img src="assets/images/thumb-rest-dog.jpg" alt="Rest in a busy world">
+          </div>
+          <div class="headline-meta">
+            <span class="headline-category">LIFESTYLE</span>
+            <h3 class="headline-title">The Power of Rest in a Busy World</h3>
+            <span class="headline-date">Aug 30, 2026</span>
+          </div>
+        </a>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       Category Icon Strip (8 clickable categories below hero)
+       ======================================================================== -->
+  <section class="category-strip-section">
+    <div class="container">
+      <div class="category-strip" role="navigation" aria-label="Category Explorer">
+        
+        <!-- Lifestyle -->
+        <a href="category.html?cat=lifestyle" class="category-item">
+          <div class="category-icon-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>
+          </div>
+          <span class="category-label">Lifestyle</span>
+        </a>
+
+        <!-- Travel -->
+        <a href="category.html?cat=travel" class="category-item">
+          <div class="category-icon-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg>
+          </div>
+          <span class="category-label">Travel</span>
+        </a>
+
+        <!-- Food -->
+        <a href="category.html?cat=food" class="category-item">
+          <div class="category-icon-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 2v6a3 3 0 0 1-3 3 3 3 0 0 1-3-3V2"/><path d="M15 2v10"/><path d="M12 12v8"/><path d="M6 2v20"/><path d="M6 7h4a2 2 0 0 0 2-2V2"/></svg>
+          </div>
+          <span class="category-label">Food</span>
+        </a>
+
+        <!-- Health -->
+        <a href="category.html?cat=health" class="category-item">
+          <div class="category-icon-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+          </div>
+          <span class="category-label">Health</span>
+        </a>
+
+        <!-- Productivity -->
+        <a href="category.html?cat=productivity" class="category-item">
+          <div class="category-icon-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          </div>
+          <span class="category-label">Productivity</span>
+        </a>
+
+        <!-- Technology -->
+        <a href="category.html?cat=technology" class="category-item">
+          <div class="category-icon-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect width="18" height="12" x="3" y="4" rx="2"/><line x1="2" y1="20" x2="22" y2="20"/></svg>
+          </div>
+          <span class="category-label">Technology</span>
+        </a>
+
+        <!-- Personal Finance -->
+        <a href="category.html?cat=personal-finance" class="category-item">
+          <div class="category-icon-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/></svg>
+          </div>
+          <span class="category-label">Personal Finance</span>
+        </a>
+
+        <!-- Inspiration -->
+        <a href="category.html?cat=inspiration" class="category-item">
+          <div class="category-icon-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+          </div>
+          <span class="category-label">Inspiration</span>
+        </a>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       Featured Article Section (Two-column block matching reference)
+       ======================================================================== -->
+  <section class="featured-section">
+    <div class="container">
+      <div class="featured-card">
+        
+        <!-- Left Text Column -->
+        <div class="featured-content">
+          <span class="featured-label">FEATURED ARTICLE</span>
+          <h2 class="featured-title">
+            <a href="post.html?slug=mindfulness-practices-daily-peace">A Calmer Mind for a Brighter Tomorrow</a>
+          </h2>
+          <p class="featured-description">
+            Learn practical ways to reduce stress, build better habits and find more joy in everyday life through science-backed mindfulness shifts.
+          </p>
+          <div class="featured-actions">
+            <a href="post.html?slug=mindfulness-practices-daily-peace" class="btn btn-dark">
+              Read the Full Story →
+            </a>
+          </div>
+          
+          <div class="featured-meta">
+            <span class="meta-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              Aug 30, 2026
+            </span>
+            <span class="meta-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              8 min read
+            </span>
+            <button class="save-btn" data-save-slug="mindfulness-practices-daily-peace" aria-label="Save featured article">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+              </svg>
+              <span class="save-btn-text">Save</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Right Visual Column with Handwritten Caption -->
+        <div class="featured-visual">
+          <img src="assets/images/featured-mindfulness.jpg" alt="Woman meditating on mountain ridge during sunrise" loading="lazy">
+          <div class="featured-caption-script">A Healthier<br>Happier<br>You</div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       Trending Now Section (4-column numbered cards matching reference)
+       ======================================================================== -->
+  <section class="trending-section">
+    <div class="container">
+      
+      <div class="section-header">
+        <h2 class="section-title">TRENDING NOW</h2>
+        <a href="blog.html?filter=trending" class="section-link">View All →</a>
+      </div>
+
+      <div class="cards-grid-4">
+        
+        <!-- Card 1 -->
+        <a href="post.html?slug=solo-travel-guide-2026" class="trending-card">
+          <div class="trending-visual-wrapper">
+            <span class="trending-number-badge">1</span>
+            <img src="assets/images/trend-southeast-asia.jpg" alt="Hidden Gems in Southeast Asia" loading="lazy">
+          </div>
+          <h3 class="trending-title">Hidden Gems in Southeast Asia</h3>
+          <span class="trending-date">Sep 3, 2026</span>
+        </a>
+
+        <!-- Card 2 -->
+        <a href="post.html?slug=healthy-meals-for-busy-people" class="trending-card">
+          <div class="trending-visual-wrapper">
+            <span class="trending-number-badge">2</span>
+            <img src="assets/images/trend-breakfast-bowl.jpg" alt="5 Quick & Healthy Breakfast Ideas" loading="lazy">
+          </div>
+          <h3 class="trending-title">5 Quick & Healthy Breakfast Ideas</h3>
+          <span class="trending-date">Aug 28, 2026</span>
+        </a>
+
+        <!-- Card 3 -->
+        <a href="post.html?slug=deep-work-focus-habits" class="trending-card">
+          <div class="trending-visual-wrapper">
+            <span class="trending-number-badge">3</span>
+            <img src="assets/images/trend-morning-routine.jpg" alt="Create a Morning Routine That Actually Works" loading="lazy">
+          </div>
+          <h3 class="trending-title">Create a Morning Routine That Actually Works</h3>
+          <span class="trending-date">Aug 25, 2026</span>
+        </a>
+
+        <!-- Card 4 -->
+        <a href="post.html?slug=digital-minimalism-reclaiming-focus" class="trending-card">
+          <div class="trending-visual-wrapper">
+            <span class="trending-number-badge">4</span>
+            <img src="assets/images/trend-digital-minimalism.jpg" alt="The Art of Digital Minimalism" loading="lazy">
+          </div>
+          <h3 class="trending-title">The Art of Digital Minimalism</h3>
+          <span class="trending-date">Aug 20, 2026</span>
+        </a>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       Newsletter Signup Band (Dark Navy Full-Width Banner matching reference)
+       ======================================================================== -->
+  <section class="newsletter-band-section" id="newsletter-section">
+    <div class="container">
+      <div class="newsletter-band">
+        
+        <!-- Left: Coffee & Leaves Graphic with Handwritten Quote -->
+        <div class="newsletter-leaves-box">
+          <svg class="newsletter-coffee-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+            <path d="M18 8h1a4 4 0 0 1 0 8h-1"/>
+            <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/>
+            <line x1="6" y1="1" x2="6" y2="4"/>
+            <line x1="10" y1="1" x2="10" y2="4"/>
+            <line x1="14" y1="1" x2="14" y2="4"/>
+          </svg>
+          <div class="newsletter-mug-script">Good<br>Ideas<br>Brighter<br>Days ♡</div>
+        </div>
+
+        <!-- Center: Headline & Subtext -->
+        <div class="newsletter-center-copy">
+          <h2>Join a Community That Cares</h2>
+          <p>Get the latest articles, tips and inspiration straight to your inbox.</p>
+        </div>
+
+        <!-- Right: Email Input & Subscribe CTA -->
+        <div class="newsletter-form-box">
+          <form data-newsletter-form class="newsletter-form">
+            <div class="newsletter-input-group">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                <polyline points="22,6 12,13 2,6"/>
+              </svg>
+              <input type="email" class="newsletter-input" placeholder="Your email address" required aria-label="Email address">
+              <button type="submit" class="newsletter-submit-btn">Subscribe</button>
+            </div>
+          </form>
+          <div class="newsletter-privacy-note">No spam. Just valuable content.</div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       Latest Articles Grid (4-column grid matching reference)
+       ======================================================================== -->
+  <section class="latest-section">
+    <div class="container">
+      
+      <div class="section-header">
+        <h2 class="section-title">LATEST ARTICLES</h2>
+        <a href="blog.html" class="section-link">View All Articles →</a>
+      </div>
+
+      <div class="cards-grid-4">
+        
+        <!-- Card 1 -->
+        <a href="post.html?slug=solo-travel-guide-2026" class="latest-card">
+          <div class="latest-thumb-wrap">
+            <img src="assets/images/latest-solo-travel.jpg" alt="Solo travel coastal beach" loading="lazy">
+          </div>
+          <span class="latest-category">TRAVEL</span>
+          <h3 class="latest-title">A Complete Guide to Solo Travel in 2026</h3>
+          <span class="latest-date">Aug 22, 2026</span>
+        </a>
+
+        <!-- Card 2 -->
+        <a href="post.html?slug=mindfulness-practices-daily-peace" class="latest-card">
+          <div class="latest-thumb-wrap">
+            <img src="assets/images/latest-mindfulness.jpg" alt="Mindfulness practices meditation" loading="lazy">
+          </div>
+          <span class="latest-category">HEALTH</span>
+          <h3 class="latest-title">Mindfulness Practices for a Happier You</h3>
+          <span class="latest-date">Aug 18, 2026</span>
+        </a>
+
+        <!-- Card 3 -->
+        <a href="post.html?slug=digital-minimalism-reclaiming-focus" class="latest-card">
+          <div class="latest-thumb-wrap">
+            <img src="assets/images/latest-productivity-tools.jpg" alt="Laptop on clean desk" loading="lazy">
+          </div>
+          <span class="latest-category">TECHNOLOGY</span>
+          <h3 class="latest-title">10 Tools to Boost Your Productivity</h3>
+          <span class="latest-date">Aug 15, 2026</span>
+        </a>
+
+        <!-- Card 4 -->
+        <a href="post.html?slug=healthy-meals-for-busy-people" class="latest-card">
+          <div class="latest-thumb-wrap">
+            <img src="assets/images/latest-budget-meals.jpg" alt="Fresh wholesome pasta meal" loading="lazy">
+          </div>
+          <span class="latest-category">FOOD</span>
+          <h3 class="latest-title">Budget-Friendly Meals That Taste Amazing</h3>
+          <span class="latest-date">Aug 12, 2026</span>
+        </a>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       Footer (Matching reference layout with logo + links + socials)
+       ======================================================================== -->
+  <footer class="site-footer">
+    <div class="container">
+      
+      <div class="footer-top">
+        <div class="footer-brand">
+          <a href="index.html">
+            <img src="assets/images/logo.png" alt="The Horizoon">
+          </a>
+          <span class="footer-tagline">Fresh Perspectives Every Day</span>
+        </div>
+
+        <nav class="footer-links" aria-label="Footer Navigation">
+          <a href="index.html" class="footer-link">Home</a>
+          <span class="footer-divider">|</span>
+          <a href="about.html" class="footer-link">About</a>
+          <span class="footer-divider">|</span>
+          <a href="blog.html" class="footer-link">Categories</a>
+          <span class="footer-divider">|</span>
+          <a href="contact.html" class="footer-link">Contact</a>
+          <span class="footer-divider">|</span>
+          <a href="privacy.html" class="footer-link">Privacy Policy</a>
+          <span class="footer-divider">|</span>
+          <a href="newsletter.html" class="footer-link">Newsletter</a>
+        </nav>
+      </div>
+
+      <div class="footer-bottom">
+        <div class="footer-socials" aria-label="Social Media Profiles">
+          <a href="https://facebook.com/thehorizoon" class="social-icon-link" aria-label="Facebook" target="_blank" rel="noopener noreferrer">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 4.84 3.44 8.87 8 9.8V15H8v-3h2V9.5C10 7.57 11.57 6 13.5 6H16v3h-2c-.55 0-1 .45-1 1v2h3v3h-3v6.95c5.05-.5 9-4.76 9-9.95z"/></svg>
+          </a>
+          <a href="https://instagram.com/thehorizoon" class="social-icon-link" aria-label="Instagram" target="_blank" rel="noopener noreferrer">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+          </a>
+          <a href="https://x.com/thehorizoon" class="social-icon-link" aria-label="X (formerly Twitter)" target="_blank" rel="noopener noreferrer">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+          </a>
+          <a href="https://youtube.com/thehorizoon" class="social-icon-link" aria-label="YouTube" target="_blank" rel="noopener noreferrer">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+          </a>
+          <a href="https://pinterest.com/thehorizoon" class="social-icon-link" aria-label="Pinterest" target="_blank" rel="noopener noreferrer">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0a12 12 0 0 0-4.37 23.18c-.05-.98-.1-2.48.02-3.55.11-.97.74-6.25.74-6.25s-.19-.38-.19-.94c0-.88.51-1.54 1.15-1.54.54 0 .8.41.8.89 0 .55-.35 1.36-.53 2.12-.15.63.32 1.15.94 1.15 1.13 0 2-.19 2-1.92 0-1.61-1.15-2.73-2.8-2.73-1.9 0-3.02 1.43-3.02 2.91 0 .58.22 1.19.5 1.53a.25.25 0 0 1 .06.24c-.06.26-.2.83-.23.95-.04.16-.14.2-.31.11-1.16-.54-1.89-2.23-1.89-3.59 0-2.92 2.12-5.61 6.13-5.61 3.22 0 5.72 2.29 5.72 5.36 0 3.2-2.02 5.77-4.82 5.77-.94 0-1.83-.49-2.13-1.07l-.58 2.21c-.21.8-.78 1.8-1.16 2.42A11.98 11.98 0 0 0 12 24c6.63 0 12-5.37 12-12S18.63 0 12 0z"/></svg>
+          </a>
+          <a href="https://linkedin.com/company/thehorizoon" class="social-icon-link" aria-label="LinkedIn" target="_blank" rel="noopener noreferrer">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.46 10.9v8.37H9.2V10.9H6.46M7.83 6.25a1.62 1.62 0 1 0 0 3.24 1.62 1.62 0 0 0 0-3.24z"/></svg>
+          </a>
+        </div>
+
+        <div class="footer-copyright">
+          © 2026 The Horizoon. All rights reserved.
+        </div>
+      </div>
+
+    </div>
+  </footer>
+
+  <!-- ========================================================================
+       Modals & Drawers: Search, Saved Bookmarks, Mobile Nav
+       ======================================================================== -->
+
+  <!-- Live Search Modal -->
+  <div class="search-modal-backdrop" id="search-modal-backdrop" role="dialog" aria-modal="true" aria-label="Search articles">
+    <div class="search-modal-dialog">
+      <div class="search-modal-header">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--color-primary);">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input type="text" id="search-modal-input" class="search-modal-input" placeholder="Search by topic, title, keyword (e.g. mindfulness)..." autocomplete="off">
+        <button id="search-modal-close" class="search-modal-close" aria-label="Close search">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      <div class="search-modal-results" id="search-modal-results">
+        <!-- Injected dynamically via JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Saved Articles Drawer -->
+  <div class="saved-drawer-backdrop" id="saved-drawer-backdrop">
+    <aside class="saved-drawer" role="complementary" aria-label="Saved Bookmarks">
+      <div class="saved-drawer-header">
+        <h3 class="saved-drawer-title">Saved Articles</h3>
+        <button id="saved-drawer-close" class="saved-item-remove" aria-label="Close saved drawer">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      <div class="saved-drawer-content" id="saved-drawer-items">
+        <!-- Rendered dynamically via JS -->
+      </div>
+    </aside>
+  </div>
+
+  <!-- Mobile Off-Canvas Navigation Drawer -->
+  <div class="mobile-nav-backdrop" id="mobile-nav-backdrop">
+    <div class="mobile-nav-drawer" role="dialog" aria-modal="true" aria-label="Mobile Navigation">
+      <div class="mobile-nav-header">
+        <img src="assets/images/logo.png" alt="The Horizoon">
+        <button id="mobile-nav-close" class="mobile-nav-close" aria-label="Close menu">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <nav class="mobile-nav-links">
+        <a href="index.html" class="mobile-nav-link active">Home</a>
+        <a href="blog.html" class="mobile-nav-link">All Articles</a>
+        <a href="about.html" class="mobile-nav-link">About The Horizoon</a>
+        <a href="contact.html" class="mobile-nav-link">Contact</a>
+        <a href="privacy.html" class="mobile-nav-link">Privacy Policy</a>
+      </nav>
+
+      <div class="mobile-categories-title">Explore Categories</div>
+      <div class="mobile-categories-list">
+        <a href="category.html?cat=lifestyle" class="mobile-category-pill">Lifestyle</a>
+        <a href="category.html?cat=travel" class="mobile-category-pill">Travel</a>
+        <a href="category.html?cat=food" class="mobile-category-pill">Food</a>
+        <a href="category.html?cat=health" class="mobile-category-pill">Health</a>
+        <a href="category.html?cat=productivity" class="mobile-category-pill">Productivity</a>
+        <a href="category.html?cat=technology" class="mobile-category-pill">Technology</a>
+        <a href="category.html?cat=personal-finance" class="mobile-category-pill">Finance</a>
+        <a href="category.html?cat=inspiration" class="mobile-category-pill">Inspiration</a>
+      </div>
+
+      <div style="margin-top: auto; padding-top: 1.5rem; border-top: 1px solid var(--color-border);">
+        <a href="#newsletter-section" class="btn btn-primary" style="width: 100%;">Subscribe to Newsletter</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="site-toast" class="toast-notification"></div>
+
+  <!-- Scripts -->
+  <script type="module" src="js/main.js"></script>
+  <script type="module" src="js/hero-slider.js"></script>
+</body>
+</html>

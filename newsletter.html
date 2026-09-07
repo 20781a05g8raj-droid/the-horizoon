@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Weekly Horizon Newsletter | The Horizoon</title>
+  <meta name="description" content="Subscribe to The Weekly Horizon: a curated Sunday morning briefing of thoughtful wellness essays, quiet productivity rituals, and slow travel inspiration.">
+  <link rel="canonical" href="https://thehorizoon.com/newsletter.html">
+
+  <link rel="icon" type="image/png" href="assets/images/logo.png">
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/responsive.css">
+
+  <style>
+    .newsletter-page-hero {
+      background: linear-gradient(135deg, var(--color-primary-dark) 0%, #0A4368 50%, var(--color-primary) 100%);
+      color: #FFFFFF;
+      padding: 5rem 0 4.5rem 0;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .newsletter-hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(8px);
+      padding: 0.4rem 1rem;
+      border-radius: var(--radius-full);
+      font-size: 0.825rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 1.25rem;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+    }
+    .newsletter-page-hero h1 {
+      font-size: clamp(2.5rem, 4.5vw, 3.75rem);
+      color: #FFFFFF;
+      margin-bottom: 1rem;
+      line-height: 1.15;
+    }
+    .newsletter-page-hero p {
+      font-size: 1.2rem;
+      color: rgba(255, 255, 255, 0.9);
+      max-width: 640px;
+      margin: 0 auto 2.5rem auto;
+      line-height: 1.6;
+    }
+    .newsletter-hero-handwriting {
+      font-family: var(--font-handwriting);
+      font-size: 2rem;
+      color: #FFFFFF;
+      transform: rotate(-3deg);
+      display: inline-block;
+      margin-top: 1rem;
+    }
+
+    /* Subscription Card Section */
+    .newsletter-signup-container {
+      max-width: 720px;
+      margin: -3rem auto 4rem auto;
+      position: relative;
+      z-index: 10;
+      padding: 0 1.5rem;
+    }
+    .newsletter-main-card {
+      background: #FFFFFF;
+      border-radius: var(--radius-xl);
+      padding: 3rem 2.5rem;
+      box-shadow: var(--shadow-xl);
+      border: 1px solid var(--color-border);
+    }
+    .newsletter-card-header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    .newsletter-card-header h2 {
+      font-size: 1.85rem;
+      margin-bottom: 0.5rem;
+    }
+    .newsletter-card-header p {
+      color: var(--color-text-muted);
+      font-size: 0.95rem;
+    }
+    .nl-form-group {
+      margin-bottom: 1.25rem;
+    }
+    .nl-label {
+      display: block;
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--color-text-main);
+      margin-bottom: 0.4rem;
+    }
+    .nl-input {
+      width: 100%;
+      padding: 0.8rem 1rem;
+      border: 1.5px solid var(--color-border);
+      border-radius: var(--radius-sm);
+      font-size: 1rem;
+      outline: none;
+      transition: border-color var(--transition-fast);
+      background-color: #F8FAFC;
+    }
+    .nl-input:focus {
+      border-color: var(--color-primary);
+      background-color: #FFFFFF;
+    }
+    .nl-topics-title {
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--color-text-main);
+      margin-bottom: 0.65rem;
+    }
+    .nl-topics-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+      margin-bottom: 1.75rem;
+    }
+    .nl-checkbox-label {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-size: 0.88rem;
+      color: var(--color-text-body);
+      cursor: pointer;
+      background: #F8FAFC;
+      border: 1px solid var(--color-border);
+      padding: 0.6rem 0.85rem;
+      border-radius: var(--radius-sm);
+      transition: all var(--transition-fast);
+    }
+    .nl-checkbox-label:hover {
+      background-color: var(--color-primary-light);
+      border-color: var(--color-primary-tint);
+    }
+    .nl-checkbox-label input[type="checkbox"] {
+      accent-color: var(--color-primary);
+      width: 16px;
+      height: 16px;
+    }
+    .nl-submit-btn {
+      width: 100%;
+      padding: 0.95rem;
+      font-size: 1.05rem;
+      font-weight: 700;
+      border-radius: var(--radius-sm);
+      background-color: var(--color-primary-dark);
+      color: #FFFFFF;
+      border: none;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+    .nl-submit-btn:hover {
+      background-color: var(--color-primary-darker);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(7, 53, 82, 0.25);
+    }
+
+    /* What you get pillars */
+    .newsletter-perks-section {
+      padding: 2rem 0 5rem 0;
+    }
+    .perks-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2rem;
+      margin-top: 3rem;
+    }
+    .perk-card {
+      background: #FFFFFF;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      padding: 2.25rem 1.75rem;
+      text-align: center;
+      transition: transform var(--transition-base);
+    }
+    .perk-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-md);
+    }
+    .perk-icon-wrap {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: var(--color-primary-light);
+      color: var(--color-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1.25rem auto;
+    }
+    .perk-icon-wrap svg {
+      width: 26px;
+      height: 26px;
+    }
+    .perk-title {
+      font-size: 1.2rem;
+      margin-bottom: 0.65rem;
+    }
+    .perk-desc {
+      font-size: 0.925rem;
+      color: var(--color-text-muted);
+      line-height: 1.6;
+      margin-bottom: 0;
+    }
+
+    /* Reader Endorsements */
+    .testimonials-section {
+      background-color: var(--color-bg-subtle);
+      padding: 4.5rem 0;
+      border-top: 1px solid var(--color-border);
+      border-bottom: 1px solid var(--color-border);
+    }
+    .testimonials-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2rem;
+      margin-top: 2.5rem;
+    }
+    .testimonial-card {
+      background: #FFFFFF;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: 1.75rem;
+    }
+    .testimonial-quote {
+      font-family: var(--font-serif);
+      font-style: italic;
+      font-size: 1.05rem;
+      line-height: 1.6;
+      color: var(--color-text-main);
+      margin-bottom: 1.25rem;
+    }
+    .testimonial-author {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .testimonial-avatar {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+    .testimonial-name {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--color-text-main);
+    }
+    .testimonial-loc {
+      font-size: 0.75rem;
+      color: var(--color-text-muted);
+    }
+
+    /* Success State */
+    .nl-success-state {
+      display: none;
+      text-align: center;
+      padding: 2rem 1rem;
+    }
+    .nl-success-state.active {
+      display: block;
+    }
+    .nl-success-icon {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      background-color: #D1FAE5;
+      color: #059669;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1.5rem auto;
+    }
+    .nl-success-icon svg {
+      width: 36px;
+      height: 36px;
+    }
+
+    @media (max-width: 860px) {
+      .perks-grid, .testimonials-grid {
+        grid-template-columns: 1fr;
+      }
+      .nl-topics-grid {
+        grid-template-columns: 1fr;
+      }
+      .newsletter-main-card {
+        padding: 2rem 1.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header / Navbar -->
+  <header class="site-header" id="site-header">
+    <div class="container header-container">
+      <a href="index.html" class="site-logo" aria-label="The Horizoon Home">
+        <img src="assets/images/logo.png" alt="The Horizoon - Fresh Perspectives Every Day">
+      </a>
+
+      <nav class="nav-menu" aria-label="Primary Navigation">
+        <a href="index.html" class="nav-link">Home</a>
+        <div class="nav-item has-dropdown">
+          <a href="blog.html" class="nav-link">
+            Categories
+            <svg class="dropdown-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+          </a>
+          <div class="nav-dropdown" role="menu">
+            <a href="category.html?cat=lifestyle" class="dropdown-link" role="menuitem">Lifestyle</a>
+            <a href="category.html?cat=travel" class="dropdown-link" role="menuitem">Travel</a>
+            <a href="category.html?cat=food" class="dropdown-link" role="menuitem">Food</a>
+            <a href="category.html?cat=health" class="dropdown-link" role="menuitem">Health</a>
+            <a href="category.html?cat=productivity" class="dropdown-link" role="menuitem">Productivity</a>
+            <a href="category.html?cat=technology" class="dropdown-link" role="menuitem">Technology</a>
+            <a href="category.html?cat=personal-finance" class="dropdown-link" role="menuitem">Personal Finance</a>
+            <a href="category.html?cat=inspiration" class="dropdown-link" role="menuitem">Inspiration</a>
+          </div>
+        </div>
+        <a href="about.html" class="nav-link">About</a>
+        <a href="blog.html" class="nav-link">Blog</a>
+        <a href="contact.html" class="nav-link">Contact</a>
+      </nav>
+
+      <div class="header-actions">
+        <button class="search-box-trigger" aria-label="Search articles">
+          <span>Search articles...</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        </button>
+        <button class="saved-trigger-btn" id="saved-trigger-btn" title="Saved Articles" aria-label="View Saved Articles">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
+          <span class="saved-badge" style="display: none;">0</span>
+        </button>
+        <a href="newsletter.html" class="btn btn-primary btn-sm">Subscribe</a>
+        <button class="mobile-menu-btn" id="mobile-menu-btn" aria-label="Open mobile menu">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Header -->
+  <section class="newsletter-page-hero">
+    <div class="container">
+      <div class="newsletter-hero-badge">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        <span>The Sunday Horizon Briefing</span>
+      </div>
+      <h1>Awaken Your Sunday Mornings</h1>
+      <p>Join 24,000+ mindful readers who start their week with grounded wellness insights, slow travel itineraries, and deep focus rituals.</p>
+      <div class="newsletter-hero-handwriting">Good Ideas. Brighter Days. ♡</div>
+    </div>
+  </section>
+
+  <!-- Form Card -->
+  <main class="newsletter-signup-container">
+    <div class="newsletter-main-card">
+      
+      <div id="nl-form-wrapper">
+        <div class="newsletter-card-header">
+          <h2>Subscribe to The Horizon Briefing</h2>
+          <p>Delivered once a week every Sunday morning at 07:00 AM. Never any spam.</p>
+        </div>
+
+        <form id="dedicated-newsletter-form">
+          <div class="nl-form-group">
+            <label for="nl-first-name" class="nl-label">Your First Name</label>
+            <input type="text" id="nl-first-name" class="nl-input" placeholder="e.g. Elena" required>
+          </div>
+
+          <div class="nl-form-group">
+            <label for="nl-email-address" class="nl-label">Email Address *</label>
+            <input type="email" id="nl-email-address" class="nl-input" placeholder="you@example.com" required>
+          </div>
+
+          <div class="nl-topics-title">Tailor Your Interests (Optional):</div>
+          <div class="nl-topics-grid">
+            <label class="nl-checkbox-label">
+              <input type="checkbox" name="topic" value="wellness" checked>
+              <span>Mindfulness & Health</span>
+            </label>
+            <label class="nl-checkbox-label">
+              <input type="checkbox" name="topic" value="productivity" checked>
+              <span>Deep Work & Focus</span>
+            </label>
+            <label class="nl-checkbox-label">
+              <input type="checkbox" name="topic" value="travel">
+              <span>Solo & Slow Travel</span>
+            </label>
+            <label class="nl-checkbox-label">
+              <input type="checkbox" name="topic" value="food">
+              <span>Wholesome Nutrition</span>
+            </label>
+          </div>
+
+          <button type="submit" class="nl-submit-btn">
+            <span>Subscribe for Free</span>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+          </button>
+
+          <div style="text-align: center; margin-top: 1rem; font-size: 0.8rem; color: var(--color-text-muted);">
+            🔒 We respect your privacy. 1-click unsubscribe anytime. Read our <a href="privacy.html" style="text-decoration: underline; color: var(--color-primary);">Privacy Policy</a>.
+          </div>
+        </form>
+      </div>
+
+      <!-- Success View -->
+      <div class="nl-success-state" id="nl-success-card">
+        <div class="nl-success-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        </div>
+        <h3 style="font-size: 1.85rem; margin-bottom: 0.5rem;">You're on the List!</h3>
+        <p style="color: var(--color-text-muted); font-size: 1.05rem; line-height: 1.6; max-width: 500px; margin: 0 auto 2rem auto;">
+          Welcome to <strong>The Horizoon</strong> community. We've sent a confirmation note to your inbox. Look out for our Sunday edition this coming weekend!
+        </p>
+        <a href="blog.html" class="btn btn-primary btn-lg">Explore Latest Articles →</a>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- What You Get Section -->
+  <section class="newsletter-perks-section">
+    <div class="container">
+      <div style="text-align: center; max-width: 600px; margin: 0 auto;">
+        <span class="category-badge">THE VALUE PROMISE</span>
+        <h2 style="font-size: 2.25rem; margin-top: 0.5rem;">What Arrives in Your Inbox</h2>
+        <p style="color: var(--color-text-muted); font-size: 1rem;">No recycled generic tips. Only substance crafted to enrich your week.</p>
+      </div>
+
+      <div class="perks-grid">
+        <div class="perk-card">
+          <div class="perk-icon-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          </div>
+          <h3 class="perk-title">The 5-Minute Quiet Read</h3>
+          <p class="perk-desc">A single, deeply reflective essay on slowing down, intentional routines, or cognitive focus that sets a tranquil tone for your morning.</p>
+        </div>
+
+        <div class="perk-card">
+          <div class="perk-icon-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4"/><path d="M12 18v4"/><path d="m4.93 4.93 2.83 2.83"/><path d="m16.24 16.24 2.83 2.83"/><path d="M2 12h4"/><path d="M18 12h4"/><path d="m4.93 19.07 2.83-2.83"/><path d="m16.24 7.76 2.83-2.83"/></svg>
+          </div>
+          <h3 class="perk-title">Actionable Micro-Habits</h3>
+          <p class="perk-desc">One practical physiological or mental shift—like the double-inhale reset or digital sunset—that you can immediately practice this week.</p>
+        </div>
+
+        <div class="perk-card">
+          <div class="perk-icon-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m19 21-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+          </div>
+          <h3 class="perk-title">Curated Cultural Finds</h3>
+          <p class="perk-desc">Hand-picked book recommendations, slow travel hidden spots, seasonal recipes, and acoustic ambient playlists vetted by our editors.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Reader Testimonials -->
+  <section class="testimonials-section">
+    <div class="container">
+      <div style="text-align: center; max-width: 600px; margin: 0 auto;">
+        <span class="category-badge">READER VOICES</span>
+        <h2 style="font-size: 2rem; margin-top: 0.5rem;">Why Readers Love Sunday Mornings</h2>
+      </div>
+
+      <div class="testimonials-grid">
+        <div class="testimonial-card">
+          <p class="testimonial-quote">"The Weekly Horizon is the only email newsletter I protect. I brew a pot of coffee, put my phone on airplane mode, and read it in complete stillness."</p>
+          <div class="testimonial-author">
+            <img src="assets/images/avatar-sophia.jpg" alt="Reader" class="testimonial-avatar">
+            <div>
+              <div class="testimonial-name">Claire Montgomery</div>
+              <div class="testimonial-loc">Architect, Portland</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="testimonial-card">
+          <p class="testimonial-quote">"In a world where media is constantly screaming for my attention, The Horizoon feels like a deep, calm breath of fresh air. Unsubscribing from everything else was easy."</p>
+          <div class="testimonial-author">
+            <img src="assets/images/avatar-marcus.jpg" alt="Reader" class="testimonial-avatar">
+            <div>
+              <div class="testimonial-name">Liam Bradley</div>
+              <div class="testimonial-loc">Software Engineer, Denver</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="testimonial-card">
+          <p class="testimonial-quote">"The focus protocols and intentional rest guides have completely reshaped how I structure my workweek. Essential reading for creative professionals."</p>
+          <div class="testimonial-author">
+            <img src="assets/images/avatar-elena.jpg" alt="Reader" class="testimonial-avatar">
+            <div>
+              <div class="testimonial-name">Nadia Al-Mansoor</div>
+              <div class="testimonial-loc">Author & Educator, Chicago</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer (Without Sitemap, With direct link to newsletter.html) -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-top">
+        <div class="footer-brand">
+          <a href="index.html"><img src="assets/images/logo.png" alt="The Horizoon"></a>
+          <span class="footer-tagline">Fresh Perspectives Every Day</span>
+        </div>
+        <nav class="footer-links" aria-label="Footer Navigation">
+          <a href="index.html" class="footer-link">Home</a>
+          <span class="footer-divider">|</span>
+          <a href="about.html" class="footer-link">About</a>
+          <span class="footer-divider">|</span>
+          <a href="blog.html" class="footer-link">Categories</a>
+          <span class="footer-divider">|</span>
+          <a href="contact.html" class="footer-link">Contact</a>
+          <span class="footer-divider">|</span>
+          <a href="privacy.html" class="footer-link">Privacy Policy</a>
+          <span class="footer-divider">|</span>
+          <a href="newsletter.html" class="footer-link">Newsletter</a>
+        </nav>
+      </div>
+      <div class="footer-bottom">
+        <div class="footer-socials">
+          <a href="https://facebook.com/thehorizoon" class="social-icon-link" aria-label="Facebook"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 4.84 3.44 8.87 8 9.8V15H8v-3h2V9.5C10 7.57 11.57 6 13.5 6H16v3h-2c-.55 0-1 .45-1 1v2h3v3h-3v6.95c5.05-.5 9-4.76 9-9.95z"/></svg></a>
+          <a href="https://instagram.com/thehorizoon" class="social-icon-link" aria-label="Instagram"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg></a>
+          <a href="https://x.com/thehorizoon" class="social-icon-link" aria-label="X"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>
+          <a href="https://youtube.com/thehorizoon" class="social-icon-link" aria-label="YouTube"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg></a>
+          <a href="https://pinterest.com/thehorizoon" class="social-icon-link" aria-label="Pinterest"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0a12 12 0 0 0-4.37 23.18c-.05-.98-.1-2.48.02-3.55.11-.97.74-6.25.74-6.25s-.19-.38-.19-.94c0-.88.51-1.54 1.15-1.54.54 0 .8.41.8.89 0 .55-.35 1.36-.53 2.12-.15.63.32 1.15.94 1.15 1.13 0 2-.19 2-1.92 0-1.61-1.15-2.73-2.8-2.73-1.9 0-3.02 1.43-3.02 2.91 0 .58.22 1.19.5 1.53a.25.25 0 0 1 .06.24c-.06.26-.2.83-.23.95-.04.16-.14.2-.31.11-1.16-.54-1.89-2.23-1.89-3.59 0-2.92 2.12-5.61 6.13-5.61 3.22 0 5.72 2.29 5.72 5.36 0 3.2-2.02 5.77-4.82 5.77-.94 0-1.83-.49-2.13-1.07l-.58 2.21c-.21.8-.78 1.8-1.16 2.42A11.98 11.98 0 0 0 12 24c6.63 0 12-5.37 12-12S18.63 0 12 0z"/></svg></a>
+          <a href="https://linkedin.com/company/thehorizoon" class="social-icon-link" aria-label="LinkedIn"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.46 10.9v8.37H9.2V10.9H6.46M7.83 6.25a1.62 1.62 0 1 0 0 3.24 1.62 1.62 0 0 0 0-3.24z"/></svg></a>
+        </div>
+        <div class="footer-copyright">© 2026 The Horizoon. All rights reserved.</div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Search, Saved Drawer & Mobile Nav -->
+  <div class="search-modal-backdrop" id="search-modal-backdrop" role="dialog" aria-modal="true">
+    <div class="search-modal-dialog">
+      <div class="search-modal-header">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--color-primary);"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        <input type="text" id="search-modal-input" class="search-modal-input" placeholder="Search by topic, title, keyword...">
+        <button id="search-modal-close" class="search-modal-close" aria-label="Close search"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+      </div>
+      <div class="search-modal-results" id="search-modal-results"></div>
+    </div>
+  </div>
+
+  <div class="saved-drawer-backdrop" id="saved-drawer-backdrop">
+    <aside class="saved-drawer">
+      <div class="saved-drawer-header">
+        <h3 class="saved-drawer-title">Saved Articles</h3>
+        <button id="saved-drawer-close" class="saved-item-remove"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+      </div>
+      <div class="saved-drawer-content" id="saved-drawer-items"></div>
+    </aside>
+  </div>
+
+  <div class="mobile-nav-backdrop" id="mobile-nav-backdrop">
+    <div class="mobile-nav-drawer">
+      <div class="mobile-nav-header">
+        <img src="assets/images/logo.png" alt="The Horizoon">
+        <button id="mobile-nav-close" class="mobile-nav-close"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+      </div>
+      <nav class="mobile-nav-links">
+        <a href="index.html" class="mobile-nav-link">Home</a>
+        <a href="blog.html" class="mobile-nav-link">All Articles</a>
+        <a href="about.html" class="mobile-nav-link">About The Horizoon</a>
+        <a href="contact.html" class="mobile-nav-link">Contact</a>
+        <a href="newsletter.html" class="mobile-nav-link active">Newsletter</a>
+        <a href="privacy.html" class="mobile-nav-link">Privacy Policy</a>
+      </nav>
+      <div class="mobile-categories-title">Explore Categories</div>
+      <div class="mobile-categories-list">
+        <a href="category.html?cat=lifestyle" class="mobile-category-pill">Lifestyle</a>
+        <a href="category.html?cat=travel" class="mobile-category-pill">Travel</a>
+        <a href="category.html?cat=food" class="mobile-category-pill">Food</a>
+        <a href="category.html?cat=health" class="mobile-category-pill">Health</a>
+        <a href="category.html?cat=productivity" class="mobile-category-pill">Productivity</a>
+        <a href="category.html?cat=technology" class="mobile-category-pill">Technology</a>
+        <a href="category.html?cat=personal-finance" class="mobile-category-pill">Finance</a>
+        <a href="category.html?cat=inspiration" class="mobile-category-pill">Inspiration</a>
+      </div>
+    </div>
+  </div>
+
+  <div id="site-toast" class="toast-notification"></div>
+
+  <script type="module" src="js/main.js"></script>
+  <script type="module">
+    document.addEventListener('DOMContentLoaded', () => {
+      const form = document.getElementById('dedicated-newsletter-form');
+      const formWrapper = document.getElementById('nl-form-wrapper');
+      const successCard = document.getElementById('nl-success-card');
+
+      if (form && successCard) {
+        form.addEventListener('submit', (e) => {
+          e.preventDefault();
+          const name = document.getElementById('nl-first-name').value.trim();
+          const email = document.getElementById('nl-email-address').value.trim();
+          const checkedTopics = Array.from(form.querySelectorAll('input[name="topic"]:checked')).map(cb => cb.value);
+
+          // Save to localStorage
+          try {
+            const subscribers = JSON.parse(localStorage.getItem('thehorizoon_subscribers') || '[]');
+            subscribers.push({ name, email, topics: checkedTopics, date: new Date().toISOString() });
+            localStorage.setItem('thehorizoon_subscribers', JSON.stringify(subscribers));
+          } catch (err) {}
+
+          formWrapper.style.display = 'none';
+          successCard.classList.add('active');
+          window.scrollTo({ top: 300, behavior: 'smooth' });
+        });
+      }
+    });
+  </script>
+</body>
+</html>

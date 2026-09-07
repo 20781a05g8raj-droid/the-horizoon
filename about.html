@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>About Us | The Horizoon - Fresh Perspectives Every Day</title>
+  <meta name="description" content="Learn about The Horizoon, our editorial philosophy, core values, and our mission to provide grounding wellness, mindful travel, and deep focus in a noisy world.">
+  <link rel="canonical" href="https://thehorizoon.com/about.html">
+
+  <link rel="icon" type="image/png" href="assets/images/logo.png">
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="css/variables.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/responsive.css">
+
+  <style>
+    .about-hero {
+      background-color: var(--color-bg-subtle);
+      padding: 4.5rem 0 3.5rem 0;
+      border-bottom: 1px solid var(--color-border);
+      text-align: center;
+    }
+    .about-hero h1 {
+      font-size: clamp(2.5rem, 4vw, 3.5rem);
+      margin-bottom: 1rem;
+    }
+    .about-hero p {
+      font-size: 1.15rem;
+      color: var(--color-text-muted);
+      max-width: 680px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+    .about-prose-section {
+      padding: 4rem 0;
+    }
+    .about-prose {
+      font-size: 1.15rem;
+      line-height: 1.85;
+      color: var(--color-text-body);
+    }
+    .about-prose p {
+      margin-bottom: 1.75rem;
+    }
+    .values-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2rem;
+      margin: 3.5rem 0;
+    }
+    .value-card {
+      background: #FFFFFF;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      padding: 2rem;
+      transition: transform var(--transition-base), box-shadow var(--transition-base);
+    }
+    .value-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-md);
+      border-color: var(--color-primary-tint);
+    }
+    .value-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: var(--radius-md);
+      background-color: var(--color-primary-light);
+      color: var(--color-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 1.25rem;
+    }
+    .value-icon svg {
+      width: 24px;
+      height: 24px;
+    }
+    .value-title {
+      font-size: 1.25rem;
+      margin-bottom: 0.75rem;
+    }
+    .value-text {
+      font-size: 0.95rem;
+      color: var(--color-text-muted);
+      line-height: 1.6;
+      margin-bottom: 0;
+    }
+    .team-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2rem;
+      margin: 3rem 0;
+    }
+    .team-card {
+      background: #FFFFFF;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      text-align: center;
+      padding: 2.25rem 1.5rem;
+      transition: transform var(--transition-base);
+    }
+    .team-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-md);
+    }
+    .team-avatar {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin: 0 auto 1.25rem auto;
+      box-shadow: 0 4px 16px rgba(11, 90, 138, 0.15);
+    }
+    .team-name {
+      font-size: 1.2rem;
+      margin-bottom: 0.25rem;
+    }
+    .team-role {
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--color-primary);
+      margin-bottom: 1rem;
+    }
+    .team-bio {
+      font-size: 0.9rem;
+      color: var(--color-text-muted);
+      line-height: 1.55;
+      margin-bottom: 0;
+    }
+    @media (max-width: 860px) {
+      .values-grid, .team-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header / Navbar -->
+  <header class="site-header" id="site-header">
+    <div class="container header-container">
+      <a href="index.html" class="site-logo" aria-label="The Horizoon Home">
+        <img src="assets/images/logo.png" alt="The Horizoon - Fresh Perspectives Every Day">
+      </a>
+
+      <nav class="nav-menu" aria-label="Primary Navigation">
+        <a href="index.html" class="nav-link">Home</a>
+        <div class="nav-item has-dropdown">
+          <a href="blog.html" class="nav-link">
+            Categories
+            <svg class="dropdown-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+          </a>
+          <div class="nav-dropdown" role="menu">
+            <a href="category.html?cat=lifestyle" class="dropdown-link" role="menuitem">Lifestyle</a>
+            <a href="category.html?cat=travel" class="dropdown-link" role="menuitem">Travel</a>
+            <a href="category.html?cat=food" class="dropdown-link" role="menuitem">Food</a>
+            <a href="category.html?cat=health" class="dropdown-link" role="menuitem">Health</a>
+            <a href="category.html?cat=productivity" class="dropdown-link" role="menuitem">Productivity</a>
+            <a href="category.html?cat=technology" class="dropdown-link" role="menuitem">Technology</a>
+            <a href="category.html?cat=personal-finance" class="dropdown-link" role="menuitem">Personal Finance</a>
+            <a href="category.html?cat=inspiration" class="dropdown-link" role="menuitem">Inspiration</a>
+          </div>
+        </div>
+        <a href="about.html" class="nav-link active">About</a>
+        <a href="blog.html" class="nav-link">Blog</a>
+        <a href="contact.html" class="nav-link">Contact</a>
+      </nav>
+
+      <div class="header-actions">
+        <button class="search-box-trigger" aria-label="Search articles">
+          <span>Search articles...</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        </button>
+        <button class="saved-trigger-btn" id="saved-trigger-btn" title="Saved Articles" aria-label="View Saved Articles">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg>
+          <span class="saved-badge" style="display: none;">0</span>
+        </button>
+        <a href="newsletter.html" class="btn btn-primary btn-sm">Subscribe</a>
+        <button class="mobile-menu-btn" id="mobile-menu-btn" aria-label="Open mobile menu">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- About Hero -->
+  <section class="about-hero">
+    <div class="container">
+      <span class="category-badge" style="margin-bottom: 0.5rem;">OUR STORY & PHILOSOPHY</span>
+      <h1>Awakening to Fresh Horizons</h1>
+      <p>We believe that when you strip away the digital clamor and intentionalize your daily routines, life reveals a boundless clarity waiting to be explored.</p>
+    </div>
+  </section>
+
+  <!-- Main About Content -->
+  <main class="about-prose-section">
+    <div class="container-narrow about-prose">
+      
+      <h2>Why We Created The Horizoon</h2>
+      <p class="lead">
+        In an era when the modern internet feels increasingly optimized for outrage, shallow metrics, and sensory overload, <strong>The Horizoon</strong> was founded as an intentional sanctuary. We wanted to build an editorial home that celebrates grounded wisdom over algorithmic clickbait, authentic rest over burnout culture, and real-world presence over endless scrolling.
+      </p>
+
+      <p>
+        The rising sun at the center of our emblem represents each morning's clean slate—a gentle, reliable invitation to begin anew. Whether you are seeking a 15-minute nourishing dinner after a frantic workday, learning how to silence notification fatigue, or gathering the courage to embark on your first solo expedition abroad, our work is written to walk beside you with grace and practical substance.
+      </p>
+
+      <blockquote>
+        "The horizon is not a distant boundary that confines us; it is the meeting point of earth and sky where fresh perspectives emerge each morning."
+      </blockquote>
+
+      <h2>Our Core Editorial Values</h2>
+      <div class="values-grid">
+        
+        <div class="value-card">
+          <div class="value-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4"/><path d="M12 18v4"/><path d="m4.93 4.93 2.83 2.83"/><path d="m16.24 16.24 2.83 2.83"/><path d="M2 12h4"/><path d="M18 12h4"/><path d="m4.93 19.07 2.83-2.83"/><path d="m16.24 7.76 2.83-2.83"/></svg>
+          </div>
+          <h3 class="value-title">Clarity Over Noise</h3>
+          <p class="value-text">Every article is researched, fact-checked against leading medical and scientific portals, and written without sensationalist fluff.</p>
+        </div>
+
+        <div class="value-card">
+          <div class="value-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>
+          </div>
+          <h3 class="value-title">Sustainable Living</h3>
+          <p class="value-text">We advocate for slow travel, regenerative food habits, circular economies, and mindful consumerism that respects our planet.</p>
+        </div>
+
+        <div class="value-card">
+          <div class="value-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m4.93 4.93 4.24 4.24"/><path d="m14.83 9.17 4.24-4.24"/><path d="m14.83 14.83 4.24 4.24"/><path d="m9.17 14.83-4.24 4.24"/></svg>
+          </div>
+          <h3 class="value-title">Humane Technology</h3>
+          <p class="value-text">We treat technology as a subservient tool to be wielded with discipline, never as a master that commands our cognitive freedom.</p>
+        </div>
+
+      </div>
+
+      <h2>Meet the Editorial Team</h2>
+      <p>
+        Our contributors include certified clinical psychologists, professional culinary educators, slow-travel essayists, and cognitive productivity strategists:
+      </p>
+
+      <div class="team-grid">
+        
+        <div class="team-card">
+          <img src="assets/images/avatar-elena.jpg" alt="Elena Vance" class="team-avatar">
+          <h3 class="team-name">Elena Vance</h3>
+          <div class="team-role">Editor in Chief & Wellness Lead</div>
+          <p class="team-bio">M.S. in Clinical Psychology, certified mindfulness teacher, and author of <em>The Quiet Horizon</em>. Dedicated to somatic restoration and daily calm.</p>
+        </div>
+
+        <div class="team-card">
+          <img src="assets/images/avatar-marcus.jpg" alt="Marcus Thorne" class="team-avatar">
+          <h3 class="team-name">Marcus Thorne</h3>
+          <div class="team-role">Productivity & Tech Columnist</div>
+          <p class="team-bio">Former systems engineer turned workflow consultant. Marcus investigates digital minimalism, ultradian cycles, and deep focus architectures.</p>
+        </div>
+
+        <div class="team-card">
+          <img src="assets/images/avatar-sophia.jpg" alt="Sophia Lin" class="team-avatar">
+          <h3 class="team-name">Sophia Lin</h3>
+          <div class="team-role">Culinary & Travel Essayist</div>
+          <p class="team-bio">Culinary nutritionist and slow travel writer who has traversed 42 countries on foot and rail. Advocate for local foodways and mindful wandering.</p>
+        </div>
+
+      </div>
+
+      <h2>Our Editorial Standards</h2>
+      <p>
+        We hold ourselves to rigorous editorial integrity:
+      </p>
+      <ul>
+        <li><strong>Evidence First:</strong> We reference peer-reviewed research, academic medical centers (e.g. Harvard, NIH, Stanford, Mayo Clinic), and official global authorities.</li>
+        <li><strong>Zero Sponsored Concealment:</strong> If an article evaluates a tool or travel lodging, all affiliate relationships or sponsored engagements are visibly disclosed upfront.</li>
+        <li><strong>Reader Well-Being:</strong> We refuse to promote extreme deprivation diets, toxic hustle regimens, or reckless pseudo-scientific trends.</li>
+      </ul>
+
+      <div style="margin-top: 3rem; text-align: center;">
+        <a href="contact.html" class="btn btn-primary btn-lg">Get in Touch With Our Team →</a>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Newsletter Signup Band -->
+  <section class="newsletter-band-section" id="newsletter-section">
+    <div class="container">
+      <div class="newsletter-band">
+        <div class="newsletter-leaves-box">
+          <svg class="newsletter-coffee-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
+          <div class="newsletter-mug-script">Good<br>Ideas<br>Brighter<br>Days ♡</div>
+        </div>
+        <div class="newsletter-center-copy">
+          <h2>Join a Community That Cares</h2>
+          <p>Get the latest articles, tips and inspiration straight to your inbox.</p>
+        </div>
+        <div class="newsletter-form-box">
+          <form data-newsletter-form class="newsletter-form">
+            <div class="newsletter-input-group">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+              <input type="email" class="newsletter-input" placeholder="Your email address" required aria-label="Email address">
+              <button type="submit" class="newsletter-submit-btn">Subscribe</button>
+            </div>
+          </form>
+          <div class="newsletter-privacy-note">No spam. Just valuable content.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-top">
+        <div class="footer-brand">
+          <a href="index.html"><img src="assets/images/logo.png" alt="The Horizoon"></a>
+          <span class="footer-tagline">Fresh Perspectives Every Day</span>
+        </div>
+        <nav class="footer-links" aria-label="Footer Navigation">
+          <a href="index.html" class="footer-link">Home</a>
+          <span class="footer-divider">|</span>
+          <a href="about.html" class="footer-link">About</a>
+          <span class="footer-divider">|</span>
+          <a href="blog.html" class="footer-link">Categories</a>
+          <span class="footer-divider">|</span>
+          <a href="contact.html" class="footer-link">Contact</a>
+          <span class="footer-divider">|</span>
+          <a href="privacy.html" class="footer-link">Privacy Policy</a>
+          <span class="footer-divider">|</span>
+          <a href="newsletter.html" class="footer-link">Newsletter</a>
+        </nav>
+      </div>
+      <div class="footer-bottom">
+        <div class="footer-socials">
+          <a href="https://facebook.com/thehorizoon" class="social-icon-link" aria-label="Facebook"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 4.84 3.44 8.87 8 9.8V15H8v-3h2V9.5C10 7.57 11.57 6 13.5 6H16v3h-2c-.55 0-1 .45-1 1v2h3v3h-3v6.95c5.05-.5 9-4.76 9-9.95z"/></svg></a>
+          <a href="https://instagram.com/thehorizoon" class="social-icon-link" aria-label="Instagram"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg></a>
+          <a href="https://x.com/thehorizoon" class="social-icon-link" aria-label="X"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>
+          <a href="https://youtube.com/thehorizoon" class="social-icon-link" aria-label="YouTube"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg></a>
+          <a href="https://pinterest.com/thehorizoon" class="social-icon-link" aria-label="Pinterest"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0a12 12 0 0 0-4.37 23.18c-.05-.98-.1-2.48.02-3.55.11-.97.74-6.25.74-6.25s-.19-.38-.19-.94c0-.88.51-1.54 1.15-1.54.54 0 .8.41.8.89 0 .55-.35 1.36-.53 2.12-.15.63.32 1.15.94 1.15 1.13 0 2-.19 2-1.92 0-1.61-1.15-2.73-2.8-2.73-1.9 0-3.02 1.43-3.02 2.91 0 .58.22 1.19.5 1.53a.25.25 0 0 1 .06.24c-.06.26-.2.83-.23.95-.04.16-.14.2-.31.11-1.16-.54-1.89-2.23-1.89-3.59 0-2.92 2.12-5.61 6.13-5.61 3.22 0 5.72 2.29 5.72 5.36 0 3.2-2.02 5.77-4.82 5.77-.94 0-1.83-.49-2.13-1.07l-.58 2.21c-.21.8-.78 1.8-1.16 2.42A11.98 11.98 0 0 0 12 24c6.63 0 12-5.37 12-12S18.63 0 12 0z"/></svg></a>
+          <a href="https://linkedin.com/company/thehorizoon" class="social-icon-link" aria-label="LinkedIn"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.46 10.9v8.37H9.2V10.9H6.46M7.83 6.25a1.62 1.62 0 1 0 0 3.24 1.62 1.62 0 0 0 0-3.24z"/></svg></a>
+        </div>
+        <div class="footer-copyright">© 2026 The Horizoon. All rights reserved.</div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Search, Saved Drawer & Mobile Nav -->
+  <div class="search-modal-backdrop" id="search-modal-backdrop" role="dialog" aria-modal="true">
+    <div class="search-modal-dialog">
+      <div class="search-modal-header">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--color-primary);"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        <input type="text" id="search-modal-input" class="search-modal-input" placeholder="Search by topic, title, keyword...">
+        <button id="search-modal-close" class="search-modal-close" aria-label="Close search"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+      </div>
+      <div class="search-modal-results" id="search-modal-results"></div>
+    </div>
+  </div>
+
+  <div class="saved-drawer-backdrop" id="saved-drawer-backdrop">
+    <aside class="saved-drawer">
+      <div class="saved-drawer-header">
+        <h3 class="saved-drawer-title">Saved Articles</h3>
+        <button id="saved-drawer-close" class="saved-item-remove"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+      </div>
+      <div class="saved-drawer-content" id="saved-drawer-items"></div>
+    </aside>
+  </div>
+
+  <div class="mobile-nav-backdrop" id="mobile-nav-backdrop">
+    <div class="mobile-nav-drawer">
+      <div class="mobile-nav-header">
+        <img src="assets/images/logo.png" alt="The Horizoon">
+        <button id="mobile-nav-close" class="mobile-nav-close"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+      </div>
+      <nav class="mobile-nav-links">
+        <a href="index.html" class="mobile-nav-link">Home</a>
+        <a href="blog.html" class="mobile-nav-link">All Articles</a>
+        <a href="about.html" class="mobile-nav-link active">About The Horizoon</a>
+        <a href="contact.html" class="mobile-nav-link">Contact</a>
+        <a href="privacy.html" class="mobile-nav-link">Privacy Policy</a>
+      </nav>
+      <div class="mobile-categories-title">Explore Categories</div>
+      <div class="mobile-categories-list">
+        <a href="category.html?cat=lifestyle" class="mobile-category-pill">Lifestyle</a>
+        <a href="category.html?cat=travel" class="mobile-category-pill">Travel</a>
+        <a href="category.html?cat=food" class="mobile-category-pill">Food</a>
+        <a href="category.html?cat=health" class="mobile-category-pill">Health</a>
+        <a href="category.html?cat=productivity" class="mobile-category-pill">Productivity</a>
+        <a href="category.html?cat=technology" class="mobile-category-pill">Technology</a>
+        <a href="category.html?cat=personal-finance" class="mobile-category-pill">Finance</a>
+        <a href="category.html?cat=inspiration" class="mobile-category-pill">Inspiration</a>
+      </div>
+    </div>
+  </div>
+
+  <div id="site-toast" class="toast-notification"></div>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
