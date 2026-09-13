@@ -64,7 +64,7 @@ function getLocalStoredPosts() {
       imageAlt: "Solo traveler standing on coastal cliffs overlooking sunlit turquoise waters",
       tags: ["Solo Travel", "Budget Travel", "Mindful Living", "Adventure"],
       summary: "Embarking on a solo journey is far more than a physical expedition—it is an exercise in self-reliance, cultural immersion, and intentional discovery.",
-      views: 1420,
+      views: 0,
       status: "published",
       createdAt: "2026-09-06T08:00:00.000Z"
     },
@@ -90,7 +90,7 @@ function getLocalStoredPosts() {
       imageAlt: "Vibrant bowl of nutritious pasta tossed with roasted tomatoes, leafy spinach, and cold-pressed olive oil",
       tags: ["Nutrition", "Meal Prep", "Healthy Eating", "Wellness"],
       summary: "Eating wholesome, energy-sustaining food does not demand hours in the kitchen. Discover 15-minute culinary frameworks designed for demanding schedules.",
-      views: 1280,
+      views: 0,
       status: "published",
       createdAt: "2026-09-04T08:00:00.000Z"
     },
@@ -116,7 +116,7 @@ function getLocalStoredPosts() {
       imageAlt: "Woman sitting in serene morning meditation by a sunlit open window with aromatic herbal tea",
       tags: ["Mindfulness", "Morning Routine", "Mental Clarity", "Wellness"],
       summary: "How you greet the first thirty minutes of your morning quietly dictates the neurological tone of your entire day.",
-      views: 2840,
+      views: 0,
       status: "published",
       createdAt: "2026-09-08T08:00:00.000Z"
     }

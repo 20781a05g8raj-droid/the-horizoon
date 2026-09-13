@@ -127,6 +127,8 @@ function escapeXml(str) {
 // ============================================================================
 function renderSeoPost(req, res) {
   const slug = req.params.slug || req.query.slug || 'mindfulness-practices-daily-peace';
+  const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown';
+  incrementPostViews(slug, String(clientIp));
   const post = getPostBySlug(slug) || getAllPosts({ status: 'published' })[0];
   const postHtmlPath = path.join(__dirname, 'post.html');
 
