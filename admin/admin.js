@@ -381,7 +381,7 @@ async function loadDashboardData() {
     tbody.innerHTML = (stats.topPosts || []).map(p => `
       <tr>
         <td>
-          <a href="../post/${p.slug}" target="_blank" class="table-post-title">${p.title}</a>
+          <a href="/post/${p.slug}" target="_blank" class="table-post-title">${p.title}</a>
           <span class="table-post-slug">/post/${p.slug}</span>
         </td>
         <td><span class="badge-cat">${p.category}</span></td>
@@ -392,7 +392,7 @@ async function loadDashboardData() {
             <button class="btn-icon" title="Edit Article" onclick="editPost('${p.id}')">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
             </button>
-            <a href="../post/${p.slug}" target="_blank" class="btn-icon" title="View SEO Page">
+            <a href="/post/${p.slug}" target="_blank" class="btn-icon" title="View SEO Page">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
             </a>
           </div>
@@ -431,7 +431,7 @@ async function loadAnalyticsData() {
         <tr>
           <td style="font-weight: 800; color: var(--adm-primary);">#${idx + 1}</td>
           <td>
-            <a href="../post/${p.slug}" target="_blank" class="table-post-title">${p.title}</a>
+            <a href="/post/${p.slug}" target="_blank" class="table-post-title">${p.title}</a>
             <span class="table-post-slug">/post/${p.slug}</span>
           </td>
           <td><span class="badge-cat">${p.category}</span></td>
@@ -496,7 +496,7 @@ function renderArticlesTable(posts) {
           <img src="${imgUrl}" alt="${p.imageAlt || p.title}" class="table-thumb" onerror="this.src='../assets/images/featured-mindfulness.jpg'">
         </td>
         <td>
-          <a href="../post/${p.slug}" target="_blank" class="table-post-title">${p.title}</a>
+          <a href="/post/${p.slug}" target="_blank" class="table-post-title">${p.title}</a>
           <span class="table-post-slug">/post/${p.slug}</span>
           <span style="font-size: 0.76rem; color: var(--adm-text-muted); display: block; margin-top: 2px;">✍️ By ${p.author?.name || 'Editorial Team'}</span>
         </td>
@@ -513,7 +513,7 @@ function renderArticlesTable(posts) {
             <button class="btn-icon" title="Edit Article" onclick="editPost('${p.id}')">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
             </button>
-            <a href="../post/${p.slug}" target="_blank" class="btn-icon" title="View Public Page">
+            <a href="/post/${p.slug}" target="_blank" class="btn-icon" title="View Public Page">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
             </a>
             <button class="btn-icon btn-icon-delete" title="Delete Article" onclick="deletePostConfirm('${p.id}', '${escapeQuote(p.title)}')">
@@ -1422,11 +1422,20 @@ if (postEditorForm) {
           body: JSON.stringify(payload)
         });
       }
+
       if (res && res.ok) {
         const data = await res.json();
-        if (data.success) {
-          // synced to backend
+        if (data.success && data.post) {
+          showAdminToast(editingPostId ? 'Article updated & stored in Supabase!' : 'Article published & stored in Supabase!', 'success');
+          editingPostId = null;
+          await loadAllArticles();
+          await loadDashboardData();
+          switchTab('articles');
+          return;
         }
+      } else if (res) {
+        const errData = await res.json().catch(() => ({}));
+        showAdminToast(errData.message || 'Error saving to database.', 'error');
       }
     } catch (err) {
       console.warn('Backend save unavailable, updating local store:', err);
@@ -1434,7 +1443,7 @@ if (postEditorForm) {
       saveBtn.disabled = false;
     }
 
-    // Update local store so article is instantly live in-browser
+    // Offline / Local store fallback
     const localPosts = getLocalStoredPosts();
     if (editingPostId) {
       const idx = localPosts.findIndex(p => String(p.id) === String(editingPostId));

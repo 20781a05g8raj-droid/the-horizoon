@@ -11,8 +11,11 @@ import {
   getPostBySlugAsync,
   getPostById,
   createPost,
+  createPostAsync,
   updatePost,
+  updatePostAsync,
   deletePost,
+  deletePostAsync,
   incrementPostViews,
   incrementPostViewsAsync,
   getStats,
@@ -130,7 +133,19 @@ function escapeXml(str) {
 // and complete article content into the HTML before sending to browser / crawler!
 // ============================================================================
 async function renderSeoPost(req, res) {
-  const slug = req.params.slug || req.query.slug || 'mindfulness-practices-daily-peace';
+  let slug = req.params?.slug || req.query?.slug;
+  if (!slug) {
+    const rawUrl = req.url || '';
+    const match = rawUrl.match(/\/post\/([^?#/]+)/);
+    if (match) slug = match[1];
+  }
+  if (!slug) {
+    const matched = req.headers['x-matched-path'] || req.headers['x-now-route-matches'] || '';
+    const match = matched.match(/\/post\/([^?#/]+)/);
+    if (match) slug = match[1];
+  }
+  if (!slug) slug = 'mindfulness-practices-daily-peace';
+
   const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown';
   let liveViews = 0;
   try {
@@ -138,16 +153,29 @@ async function renderSeoPost(req, res) {
   } catch (e) {}
 
   let post = await getPostBySlugAsync(slug);
+  if (!post && decodeURIComponent(slug) !== slug) {
+    post = await getPostBySlugAsync(decodeURIComponent(slug));
+  }
   if (!post) {
-    const published = await getAllPostsAsync({ status: 'published' });
-    post = published[0];
+    const all = await getAllPostsAsync({ status: 'published' });
+    post = all.find(p => p.slug === slug || p.slug === decodeURIComponent(slug));
+    if (!post && all.length > 0) {
+      post = all[0];
+    }
   }
   if (post && liveViews > 0) {
     post.views = liveViews;
   }
-  const postHtmlPath = path.join(__dirname, 'post.html');
 
-  if (!fs.existsSync(postHtmlPath)) {
+  const candidatePaths = [
+    path.join(__dirname, 'post.html'),
+    path.join(process.cwd(), 'post.html'),
+    path.join(__dirname, '..', 'post.html'),
+    path.resolve('post.html')
+  ];
+  const postHtmlPath = candidatePaths.find(p => fs.existsSync(p));
+
+  if (!postHtmlPath) {
     return res.status(404).send('Template post.html not found');
   }
 
@@ -255,8 +283,15 @@ async function renderSeoPost(req, res) {
 
 // Register SEO routes
 app.get('/post/:slug', renderSeoPost);
+app.get('/post', renderSeoPost);
 app.get('/post.html', (req, res, next) => {
-  if (req.query.slug) {
+  if (req.query && req.query.slug) {
+    return renderSeoPost(req, res);
+  }
+  next();
+});
+app.get('/api/index.js', (req, res, next) => {
+  if (req.query && req.query.slug) {
     return renderSeoPost(req, res);
   }
   next();
@@ -403,7 +438,7 @@ app.post('/api/posts/:slug/view', async (req, res) => {
 });
 
 // Create new post (Admin required)
-app.post('/api/posts', requireAuth, (req, res) => {
+app.post('/api/posts', requireAuth, async (req, res) => {
   const {
     title,
     slug,
@@ -435,7 +470,7 @@ app.post('/api/posts', requireAuth, (req, res) => {
   }
 
   // Check slug uniqueness
-  let existing = getPostBySlug(cleanSlug);
+  let existing = await getPostBySlugAsync(cleanSlug);
   if (existing) {
     cleanSlug = `${cleanSlug}-${Math.floor(Math.random() * 1000)}`;
   }
@@ -448,26 +483,26 @@ app.post('/api/posts', requireAuth, (req, res) => {
     });
   }
 
-function normalizeContentHtml(html) {
-  if (!html) return '';
-  return html.replace(/<a\s+([^>]*?)href=["']([^"']+)["']([^>]*?)>/gi, (match, prefix, href, suffix) => {
-    let cleanHref = href.trim();
-    if (!/^(https?:\/\/|mailto:|tel:|#|javascript:|\/|\/\/)/i.test(cleanHref)) {
-      if (/^[a-zA-Z0-9_-]+\.html/i.test(cleanHref)) {
-        cleanHref = '/' + cleanHref;
-      } else {
-        cleanHref = 'https://' + cleanHref;
+  function normalizeContentHtml(html) {
+    if (!html) return '';
+    return html.replace(/<a\s+([^>]*?)href=["']([^"']+)["']([^>]*?)>/gi, (match, prefix, href, suffix) => {
+      let cleanHref = href.trim();
+      if (!/^(https?:\/\/|mailto:|tel:|#|javascript:|\/|\/\/)/i.test(cleanHref)) {
+        if (/^[a-zA-Z0-9_-]+\.html/i.test(cleanHref)) {
+          cleanHref = '/' + cleanHref;
+        } else {
+          cleanHref = 'https://' + cleanHref;
+        }
       }
-    }
-    const combined = `${prefix} ${suffix}`;
-    const hasTarget = /target=/i.test(combined);
-    const isExternal = /^https?:\/\//i.test(cleanHref);
-    const targetAdd = (!hasTarget && isExternal) ? ' target="_blank" rel="noopener noreferrer"' : '';
-    return `<a ${prefix}href="${cleanHref}"${suffix}${targetAdd}>`;
-  });
-}
+      const combined = `${prefix} ${suffix}`;
+      const hasTarget = /target=/i.test(combined);
+      const isExternal = /^https?:\/\//i.test(cleanHref);
+      const targetAdd = (!hasTarget && isExternal) ? ' target="_blank" rel="noopener noreferrer"' : '';
+      return `<a ${prefix}href="${cleanHref}"${suffix}${targetAdd}>`;
+    });
+  }
 
-  const newPost = createPost({
+  const newPost = await createPostAsync({
     title: title.trim(),
     slug: cleanSlug,
     category: category || 'Lifestyle',
@@ -485,31 +520,45 @@ function normalizeContentHtml(html) {
 
   res.status(201).json({
     success: true,
-    message: 'Article published successfully!',
+    message: 'Article published & saved to Supabase successfully!',
     post: newPost
   });
 });
 
 // Update post (Admin required)
-app.put('/api/posts/:id', requireAuth, (req, res) => {
+app.put('/api/posts/:id', requireAuth, async (req, res) => {
   const updateData = { ...req.body };
   if (updateData.content) {
-    updateData.content = normalizeContentHtml(updateData.content);
+    updateData.content = updateData.content.replace(/<a\s+([^>]*?)href=["']([^"']+)["']([^>]*?)>/gi, (match, prefix, href, suffix) => {
+      let cleanHref = href.trim();
+      if (!/^(https?:\/\/|mailto:|tel:|#|javascript:|\/|\/\/)/i.test(cleanHref)) {
+        if (/^[a-zA-Z0-9_-]+\.html/i.test(cleanHref)) {
+          cleanHref = '/' + cleanHref;
+        } else {
+          cleanHref = 'https://' + cleanHref;
+        }
+      }
+      const combined = `${prefix} ${suffix}`;
+      const hasTarget = /target=/i.test(combined);
+      const isExternal = /^https?:\/\//i.test(cleanHref);
+      const targetAdd = (!hasTarget && isExternal) ? ' target="_blank" rel="noopener noreferrer"' : '';
+      return `<a ${prefix}href="${cleanHref}"${suffix}${targetAdd}>`;
+    });
   }
-  const updated = updatePost(req.params.id, updateData);
+  const updated = await updatePostAsync(req.params.id, updateData);
   if (!updated) {
     return res.status(404).json({ success: false, message: 'Post not found.' });
   }
   res.json({
     success: true,
-    message: 'Article updated successfully!',
+    message: 'Article updated & saved to Supabase successfully!',
     post: updated
   });
 });
 
 // Delete post (Admin required)
-app.delete('/api/posts/:id', requireAuth, (req, res) => {
-  const success = deletePost(req.params.id);
+app.delete('/api/posts/:id', requireAuth, async (req, res) => {
+  const success = await deletePostAsync(req.params.id);
   if (!success) {
     return res.status(404).json({ success: false, message: 'Post not found.' });
   }

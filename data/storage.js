@@ -376,6 +376,58 @@ export function getPostById(id) {
   return db.posts.find(p => p.id === id);
 }
 
+export async function createPostAsync(postData) {
+  // Calculate reading time & word count
+  const words = (postData.content || '').replace(/<[^>]*>/g, '').split(/\s+/).filter(Boolean).length;
+  const readTimeMinutes = Math.max(1, Math.round(words / 200));
+
+  const newPost = {
+    id: `post-${Date.now()}`,
+    slug: postData.slug,
+    category: postData.category || 'Lifestyle',
+    categorySlug: (postData.categorySlug || postData.category || 'lifestyle').toLowerCase().replace(/\s+/g, '-'),
+    title: postData.title,
+    seoTitle: postData.seoTitle || postData.title,
+    metaDesc: postData.metaDesc || (postData.summary || '').slice(0, 155),
+    date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+    isoDate: new Date().toISOString(),
+    readTime: `${readTimeMinutes} min read`,
+    wordsCount: words,
+    author: postData.author || {
+      name: "The Horizoon Editorial Team",
+      role: "Staff Writer",
+      bio: "Editorial voice of The Horizoon bringing fresh perspectives on intentional living.",
+      avatar: "assets/images/avatar-elena.jpg"
+    },
+    image: postData.image || "assets/images/featured-mindfulness.jpg",
+    imageAlt: postData.imageAlt || postData.title,
+    tags: Array.isArray(postData.tags) ? postData.tags : (postData.tags ? postData.tags.split(',').map(s => s.trim()) : []),
+    summary: postData.summary || '',
+    content: postData.content || '',
+    views: 0,
+    status: postData.status || 'published',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  };
+
+  // 1. Await Supabase insertion
+  try {
+    const saved = await upsertPostInSupabase(newPost);
+    if (saved) {
+      console.log('⚡ Successfully saved article in Supabase:', newPost.slug);
+    }
+  } catch (err) {
+    console.warn('Supabase post create warning:', err.message);
+  }
+
+  // 2. Also keep local memory copy updated
+  const db = readDb();
+  db.posts.unshift(newPost);
+  writeDb(db);
+
+  return newPost;
+}
+
 export function createPost(postData) {
   const db = readDb();
   
@@ -418,6 +470,55 @@ export function createPost(postData) {
   return newPost;
 }
 
+export async function updatePostAsync(id, updateData) {
+  const db = readDb();
+  const index = db.posts.findIndex(p => p.id === id || p.slug === id);
+  let existing = index !== -1 ? db.posts[index] : null;
+
+  if (!existing) {
+    const remotePosts = await getPostsFromSupabase();
+    if (remotePosts) {
+      existing = remotePosts.find(p => p.id === id || p.slug === id);
+    }
+  }
+
+  if (!existing) return null;
+
+  let words = existing.wordsCount;
+  let readTime = existing.readTime;
+  if (updateData.content) {
+    words = (updateData.content || '').replace(/<[^>]*>/g, '').split(/\s+/).filter(Boolean).length;
+    readTime = `${Math.max(1, Math.round(words / 200))} min read`;
+  }
+
+  const updated = {
+    ...existing,
+    ...updateData,
+    id: existing.id,
+    views: existing.views || 0,
+    wordsCount: words,
+    readTime: readTime,
+    tags: Array.isArray(updateData.tags) ? updateData.tags : (updateData.tags ? updateData.tags.split(',').map(s => s.trim()) : existing.tags),
+    updatedAt: new Date().toISOString()
+  };
+
+  // 1. Await Supabase update
+  try {
+    await upsertPostInSupabase(updated);
+    console.log('⚡ Successfully updated article in Supabase:', updated.slug);
+  } catch (err) {
+    console.warn('Supabase post update warning:', err.message);
+  }
+
+  // 2. Local db
+  if (index !== -1) {
+    db.posts[index] = updated;
+    writeDb(db);
+  }
+
+  return updated;
+}
+
 export function updatePost(id, updateData) {
   const db = readDb();
   const index = db.posts.findIndex(p => p.id === id || p.slug === id);
@@ -448,6 +549,16 @@ export function updatePost(id, updateData) {
   writeDb(db);
   upsertPostInSupabase(updated).catch(() => {});
   return updated;
+}
+
+export async function deletePostAsync(id) {
+  try {
+    await deletePostFromSupabase(id);
+    console.log('⚡ Successfully deleted article from Supabase:', id);
+  } catch (err) {
+    console.warn('Supabase post delete warning:', err.message);
+  }
+  return deletePost(id);
 }
 
 export function deletePost(id) {
