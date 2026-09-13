@@ -33,12 +33,39 @@ function showAdminToast(message, type = 'default') {
 // ==========================================================================
 const FALLBACK_KEY = 'horizoon_local_posts';
 
+// Immediately purge any legacy mock views in browser's local cache
+(function purgeLegacyViews() {
+  try {
+    const local = localStorage.getItem(FALLBACK_KEY);
+    if (local) {
+      const posts = JSON.parse(local);
+      if (Array.isArray(posts)) {
+        let changed = false;
+        posts.forEach(p => {
+          if (p.views !== 0) {
+            p.views = 0;
+            changed = true;
+          }
+        });
+        if (changed) {
+          localStorage.setItem(FALLBACK_KEY, JSON.stringify(posts));
+        }
+      }
+    }
+  } catch (e) {}
+})();
+
 function getLocalStoredPosts() {
   const local = localStorage.getItem(FALLBACK_KEY);
   if (local) {
     try {
       const parsed = JSON.parse(local);
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        parsed.forEach(p => {
+          if (typeof p.views !== 'number' || isNaN(p.views)) p.views = 0;
+        });
+        return parsed;
+      }
     } catch (e) {}
   }
   const defaults = [
@@ -335,36 +362,43 @@ async function loadDashboardData() {
   const avg = stats.totalPublished > 0 ? Math.round(stats.totalViews / stats.totalPublished) : 0;
   document.getElementById('stat-avg-views').textContent = avg.toLocaleString();
 
-  if (stats.topPosts && stats.topPosts.length > 0) {
+  if (stats.topPosts && stats.topPosts.length > 0 && (stats.totalViews || 0) > 0) {
     const top = stats.topPosts[0];
     document.getElementById('stat-top-title').textContent = top.title;
     document.getElementById('stat-top-views').textContent = `${(top.views || 0).toLocaleString()} organic views`;
+  } else if (stats.topPosts && stats.topPosts.length > 0) {
+    const top = stats.topPosts[0];
+    document.getElementById('stat-top-title').textContent = top.title;
+    document.getElementById('stat-top-views').textContent = '0 organic views';
+  } else {
+    document.getElementById('stat-top-title').textContent = 'No traffic yet';
+    document.getElementById('stat-top-views').textContent = '0 organic views';
+  }
 
-    // Render top posts table
-    const tbody = document.getElementById('top-posts-tbody');
-    if (tbody) {
-      tbody.innerHTML = stats.topPosts.map(p => `
-        <tr>
-          <td>
-            <a href="../post/${p.slug}" target="_blank" class="table-post-title">${p.title}</a>
-            <span class="table-post-slug">/post/${p.slug}</span>
-          </td>
-          <td><span class="badge-cat">${p.category}</span></td>
-          <td><span class="views-pill">👁️ ${(p.views || 0).toLocaleString()}</span></td>
-          <td><span class="badge-status published">Live</span></td>
-          <td>
-            <div class="action-btns">
-              <button class="btn-icon" title="Edit Article" onclick="editPost('${p.id}')">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-              </button>
-              <a href="../post/${p.slug}" target="_blank" class="btn-icon" title="View SEO Page">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
-              </a>
-            </div>
-          </td>
-        </tr>
-      `).join('');
-    }
+  // Render top posts table
+  const tbody = document.getElementById('top-posts-tbody');
+  if (tbody) {
+    tbody.innerHTML = (stats.topPosts || []).map(p => `
+      <tr>
+        <td>
+          <a href="../post/${p.slug}" target="_blank" class="table-post-title">${p.title}</a>
+          <span class="table-post-slug">/post/${p.slug}</span>
+        </td>
+        <td><span class="badge-cat">${p.category}</span></td>
+        <td><span class="views-pill">👁️ ${(Number(p.views) || 0).toLocaleString()}</span></td>
+        <td><span class="badge-status published">Live</span></td>
+        <td>
+          <div class="action-btns">
+            <button class="btn-icon" title="Edit Article" onclick="editPost('${p.id}')">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+            </button>
+            <a href="../post/${p.slug}" target="_blank" class="btn-icon" title="View SEO Page">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+            </a>
+          </div>
+        </td>
+      </tr>
+    `).join('');
   }
 }
 
@@ -383,15 +417,16 @@ async function loadAnalyticsData() {
   }
 
   if (!posts) {
-    posts = [...getLocalStoredPosts()].sort((a, b) => (b.views || 0) - (a.views || 0));
+    posts = [...getLocalStoredPosts()].sort((a, b) => (Number(b.views) || 0) - (Number(a.views) || 0));
   }
 
-  const maxViews = posts.length > 0 ? Math.max(...posts.map(p => p.views || 0), 1) : 1;
+  const maxViews = posts.length > 0 ? Math.max(...posts.map(p => Number(p.views) || 0), 0) : 0;
   const tbody = document.getElementById('analytics-tbody');
 
   if (tbody) {
     tbody.innerHTML = posts.map((p, idx) => {
-      const percentage = Math.round(((p.views || 0) / maxViews) * 100);
+      const currentV = Number(p.views) || 0;
+      const percentage = maxViews > 0 ? Math.round((currentV / maxViews) * 100) : 0;
       return `
         <tr>
           <td style="font-weight: 800; color: var(--adm-primary);">#${idx + 1}</td>
@@ -400,7 +435,7 @@ async function loadAnalyticsData() {
             <span class="table-post-slug">/post/${p.slug}</span>
           </td>
           <td><span class="badge-cat">${p.category}</span></td>
-          <td><strong style="font-size: 1.05rem;">👁️ ${(p.views || 0).toLocaleString()}</strong></td>
+          <td><strong style="font-size: 1.05rem;">👁️ ${currentV.toLocaleString()}</strong></td>
           <td>${p.readTime || '8 min read'}</td>
           <td style="width: 220px;">
             <div class="progress-bar-bg" title="${percentage}% of top traffic">
@@ -425,6 +460,7 @@ async function loadAllArticles() {
       const data = await res.json();
       if (data.success && data.posts) {
         currentPosts = data.posts;
+        saveLocalStoredPosts(currentPosts);
         renderArticlesTable(currentPosts);
         return;
       }

@@ -33,6 +33,9 @@ export async function initBlogPage() {
       const local = JSON.parse(localStorage.getItem('horizoon_local_posts') || '[]');
       const published = local.filter(p => p.status === 'published');
       if (published.length > 0) {
+        published.forEach(p => {
+          if (typeof p.views !== 'number' || isNaN(p.views)) p.views = 0;
+        });
         activeArticles = published;
       }
     } catch (e) {}

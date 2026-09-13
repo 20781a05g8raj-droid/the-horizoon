@@ -6,13 +6,17 @@ import { fileURLToPath } from 'url';
 import multer from 'multer';
 import {
   getAllPosts,
+  getAllPostsAsync,
   getPostBySlug,
+  getPostBySlugAsync,
   getPostById,
   createPost,
   updatePost,
   deletePost,
   incrementPostViews,
+  incrementPostViewsAsync,
   getStats,
+  getStatsAsync,
   getCategories,
   getAuthors,
   syncWithSupabase
@@ -125,11 +129,22 @@ function escapeXml(str) {
 // Injects rich SEO tags, Open Graph, Twitter Cards, Schema.org JSON-LD,
 // and complete article content into the HTML before sending to browser / crawler!
 // ============================================================================
-function renderSeoPost(req, res) {
+async function renderSeoPost(req, res) {
   const slug = req.params.slug || req.query.slug || 'mindfulness-practices-daily-peace';
   const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown';
-  incrementPostViews(slug, String(clientIp));
-  const post = getPostBySlug(slug) || getAllPosts({ status: 'published' })[0];
+  let liveViews = 0;
+  try {
+    liveViews = await incrementPostViewsAsync(slug, String(clientIp));
+  } catch (e) {}
+
+  let post = await getPostBySlugAsync(slug);
+  if (!post) {
+    const published = await getAllPostsAsync({ status: 'published' });
+    post = published[0];
+  }
+  if (post && liveViews > 0) {
+    post.views = liveViews;
+  }
   const postHtmlPath = path.join(__dirname, 'post.html');
 
   if (!fs.existsSync(postHtmlPath)) {
@@ -251,8 +266,8 @@ app.get('/post.html', (req, res, next) => {
 // 2. DYNAMIC SITEMAP: /sitemap.xml
 // Auto-discovers all published posts with Google Image extensions & dates!
 // ============================================================================
-app.get('/sitemap.xml', (req, res) => {
-  const posts = getAllPosts({ status: 'published' });
+app.get('/sitemap.xml', async (req, res) => {
+  const posts = await getAllPostsAsync({ status: 'published' });
   const categories = getCategories();
   const today = new Date().toISOString().split('T')[0];
 
@@ -352,12 +367,12 @@ app.get('/api/admin/verify', requireAuth, (req, res) => {
 });
 
 // Get all posts (public: published only, admin: can request all)
-app.get('/api/posts', (req, res) => {
+app.get('/api/posts', async (req, res) => {
   const { category, search, sort, status } = req.query;
   const isAuth = (req.headers.authorization || '').includes(ADMIN_TOKEN);
   const filterStatus = isAuth && status ? status : (status || 'published');
 
-  const posts = getAllPosts({
+  const posts = await getAllPostsAsync({
     category,
     search,
     sort: sort || 'newest',
@@ -372,8 +387,8 @@ app.get('/api/posts', (req, res) => {
 });
 
 // Get single post by slug
-app.get('/api/posts/:slug', (req, res) => {
-  const post = getPostBySlug(req.params.slug);
+app.get('/api/posts/:slug', async (req, res) => {
+  const post = await getPostBySlugAsync(req.params.slug);
   if (!post) {
     return res.status(404).json({ success: false, message: 'Post not found.' });
   }
@@ -381,9 +396,9 @@ app.get('/api/posts/:slug', (req, res) => {
 });
 
 // Record Organic Post View (Live View Counter)
-app.post('/api/posts/:slug/view', (req, res) => {
+app.post('/api/posts/:slug/view', async (req, res) => {
   const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '127.0.0.1';
-  const views = incrementPostViews(req.params.slug, String(ip));
+  const views = await incrementPostViewsAsync(req.params.slug, String(ip));
   res.json({ success: true, views });
 });
 
@@ -519,8 +534,8 @@ app.post('/api/upload', requireAuth, upload.single('image'), (req, res) => {
 });
 
 // Admin Dashboard Analytics
-app.get('/api/stats', requireAuth, (req, res) => {
-  const stats = getStats();
+app.get('/api/stats', requireAuth, async (req, res) => {
+  const stats = await getStatsAsync();
   res.json({
     success: true,
     stats

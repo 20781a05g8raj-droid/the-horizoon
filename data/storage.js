@@ -6,6 +6,7 @@ import {
   upsertPostInSupabase,
   deletePostFromSupabase,
   incrementViewsInSupabase,
+  recordPostViewInSupabase,
   checkSupabaseStatus
 } from './supabase.js';
 
@@ -276,6 +277,50 @@ function writeDb(data) {
   }
 }
 
+export async function getAllPostsAsync({ category, search, sort = 'newest', status } = {}) {
+  let posts = null;
+  try {
+    const remote = await getPostsFromSupabase();
+    if (remote && Array.isArray(remote) && remote.length > 0) {
+      posts = [...remote];
+    }
+  } catch (e) {}
+
+  if (!posts) {
+    posts = getAllPosts({ category, search, sort, status });
+    return posts;
+  }
+
+  if (status) {
+    posts = posts.filter(p => p.status === status);
+  }
+
+  if (category && category !== 'all') {
+    posts = posts.filter(p => (p.categorySlug || '').toLowerCase() === category.toLowerCase() || (p.category || '').toLowerCase() === category.toLowerCase());
+  }
+
+  if (search) {
+    const q = search.toLowerCase();
+    posts = posts.filter(p =>
+      (p.title || '').toLowerCase().includes(q) ||
+      (p.summary || '').toLowerCase().includes(q) ||
+      (p.tags || []).some(t => t.toLowerCase().includes(q))
+    );
+  }
+
+  if (sort === 'newest') {
+    posts.sort((a, b) => new Date(b.createdAt || b.isoDate || b.date) - new Date(a.createdAt || a.isoDate || a.date));
+  } else if (sort === 'oldest') {
+    posts.sort((a, b) => new Date(a.createdAt || a.isoDate || a.date) - new Date(b.createdAt || b.isoDate || b.date));
+  } else if (sort === 'views') {
+    posts.sort((a, b) => (Number(b.views) || 0) - (Number(a.views) || 0));
+  } else if (sort === 'title') {
+    posts.sort((a, b) => (a.title || '').localeCompare(b.title || ''));
+  }
+
+  return posts;
+}
+
 export function getAllPosts({ category, search, sort = 'newest', status } = {}) {
   const db = readDb();
   let posts = [...db.posts];
@@ -308,6 +353,17 @@ export function getAllPosts({ category, search, sort = 'newest', status } = {}) 
   }
 
   return posts;
+}
+
+export async function getPostBySlugAsync(slug) {
+  try {
+    const remote = await getPostsFromSupabase();
+    if (remote && Array.isArray(remote)) {
+      const found = remote.find(p => p.slug === slug);
+      if (found) return found;
+    }
+  } catch (e) {}
+  return getPostBySlug(slug);
 }
 
 export function getPostBySlug(slug) {
@@ -406,12 +462,46 @@ export function deletePost(id) {
   return false;
 }
 
-export function incrementPostViews(slug, clientIp = 'unknown') {
+export async function incrementPostViewsAsync(slug, clientIp = 'unknown') {
   const cacheKey = `${slug}_${clientIp}`;
   const now = Date.now();
   const TEN_MINUTES = 10 * 60 * 1000;
 
   // Simple IP debounce: 1 view per IP per post per 10 minutes
+  if (recentViews.has(cacheKey)) {
+    const lastTime = recentViews.get(cacheKey);
+    if (now - lastTime < TEN_MINUTES) {
+      const p = await getPostBySlugAsync(slug);
+      return p ? (Number(p.views) || 0) : 0;
+    }
+  }
+
+  recentViews.set(cacheKey, now);
+
+  // Directly increment in Supabase for live real-time audience counter
+  try {
+    const liveViews = await recordPostViewInSupabase(slug);
+    if (liveViews !== null) {
+      const db = readDb();
+      const localPost = db.posts.find(p => p.slug === slug);
+      if (localPost) {
+        localPost.views = liveViews;
+        writeDb(db);
+      }
+      return liveViews;
+    }
+  } catch (err) {
+    console.warn('Supabase live view record failed, falling back to local:', err.message);
+  }
+
+  return incrementPostViews(slug, clientIp);
+}
+
+export function incrementPostViews(slug, clientIp = 'unknown') {
+  const cacheKey = `${slug}_${clientIp}`;
+  const now = Date.now();
+  const TEN_MINUTES = 10 * 60 * 1000;
+
   if (recentViews.has(cacheKey)) {
     const lastTime = recentViews.get(cacheKey);
     if (now - lastTime < TEN_MINUTES) {
@@ -432,6 +522,44 @@ export function incrementPostViews(slug, clientIp = 'unknown') {
     return post.views;
   }
   return 0;
+}
+
+export async function getStatsAsync() {
+  let posts = null;
+  try {
+    const remote = await getPostsFromSupabase();
+    if (remote && Array.isArray(remote) && remote.length > 0) {
+      posts = remote;
+    }
+  } catch (e) {}
+
+  if (!posts) {
+    return getStats();
+  }
+
+  const totalPosts = posts.length;
+  const totalPublished = posts.filter(p => p.status === 'published').length;
+  const totalViews = posts.reduce((acc, p) => acc + (Number(p.views) || 0), 0);
+  
+  const topPosts = [...posts]
+    .filter(p => p.status === 'published')
+    .sort((a, b) => (Number(b.views) || 0) - (Number(a.views) || 0))
+    .slice(0, 5)
+    .map(p => ({
+      id: p.id,
+      slug: p.slug,
+      title: p.title,
+      category: p.category,
+      views: Number(p.views) || 0,
+      image: p.image
+    }));
+
+  return {
+    totalPosts,
+    totalPublished,
+    totalViews,
+    topPosts
+  };
 }
 
 export function getStats() {

@@ -147,7 +147,7 @@ export async function incrementViewsInSupabase(slug, views) {
   try {
     const { error } = await supabase
       .from('posts')
-      .update({ views })
+      .update({ views: Number(views) || 0 })
       .eq('slug', slug);
 
     if (error) {
@@ -157,6 +157,41 @@ export async function incrementViewsInSupabase(slug, views) {
     return true;
   } catch (err) {
     return false;
+  }
+}
+
+/**
+ * Atomically increment and return live real view count from Supabase
+ */
+export async function recordPostViewInSupabase(slug) {
+  try {
+    const { data, error } = await supabase
+      .from('posts')
+      .select('views')
+      .eq('slug', slug)
+      .single();
+
+    if (error || !data) {
+      return null;
+    }
+
+    const currentViews = Number(data.views) || 0;
+    const newViews = currentViews + 1;
+
+    const { error: updateError } = await supabase
+      .from('posts')
+      .update({ views: newViews })
+      .eq('slug', slug);
+
+    if (updateError) {
+      console.warn('Supabase view increment error:', updateError.message);
+      return currentViews;
+    }
+
+    return newViews;
+  } catch (err) {
+    console.warn('recordPostViewInSupabase exception:', err.message);
+    return null;
   }
 }
 

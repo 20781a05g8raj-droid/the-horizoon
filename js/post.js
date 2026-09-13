@@ -59,11 +59,6 @@ export async function initSinglePost() {
 
   if (!article) return;
 
-  // Track live real-audience view
-  if (article && article.slug) {
-    fetch(`/api/posts/${encodeURIComponent(article.slug)}/view`, { method: 'POST' }).catch(() => {});
-  }
-
   renderPostHeader(article);
   renderPostBody(article);
   renderAuthorBio(article);
