@@ -38,22 +38,40 @@
   - Working newsletter subscription engine with toast notifications.
   - Dynamic Table of Contents with scroll-spy highlighting.
   - Working reader discussion / comment submission system.
+  - Live organic post view counter with analytics tracking.
+  - Full-featured Editorial Admin Panel & SEO Studio (`/admin`).
 
 ---
 
 ## 🚀 Getting Started
 
-No build tools or bundlers required to run. Open with any browser or static web server:
+### 1. Running the Full SEO Backend & Admin Suite (Recommended)
+
+Run the Node.js Express server with live SEO prerendering, view counters, and admin suite:
 
 ```bash
-# Using Node.js:
-npx serve .
+# Install dependencies (first time only)
+npm install
 
+# Start the server
+npm start
+```
+
+- **Public Website**: `http://localhost:3000`
+- **Admin Panel & SEO Studio**: `http://localhost:3000/admin`
+  - **Username**: `admin`
+  - **Password**: `horizoon2026`
+- **Dynamic Sitemap**: `http://localhost:3000/sitemap.xml`
+
+### 2. Static File Mode
+
+You can also preview statically without backend writing capabilities:
+
+```bash
+npx serve .
 # Or using Python:
 python -m http.server 3000
 ```
-
-Then visit `http://localhost:3000` in your web browser.
 
 ---
 

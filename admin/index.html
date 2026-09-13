@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Horizoon — Editorial Admin & SEO Studio</title>
+  <link rel="icon" type="image/png" href="../assets/images/logo.png">
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,400&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+
+  <!-- ========================================================================
+       1. ADMIN AUTH / LOGIN MODAL
+       ======================================================================== -->
+  <div id="login-screen" class="login-screen active">
+    <div class="login-card">
+      <div class="login-brand">
+        <img src="../assets/images/logo.png" alt="The Horizoon Logo" class="login-logo">
+        <h2>Editorial Studio</h2>
+        <p>Sign in to publish, manage SEO articles, and monitor reader analytics</p>
+      </div>
+
+      <form id="login-form" class="login-form">
+        <div class="form-group">
+          <label for="login-username">Username</label>
+          <input type="text" id="login-username" value="admin" required placeholder="admin" autocomplete="username">
+        </div>
+
+        <div class="form-group">
+          <label for="login-password">Password</label>
+          <input type="password" id="login-password" value="horizoon2026" required placeholder="••••••••" autocomplete="current-password">
+        </div>
+
+        <div id="login-error" class="alert-box alert-error" style="display: none;"></div>
+
+        <button type="submit" class="btn btn-primary btn-block" id="btn-login-submit">
+          <span>Sign In to Admin Panel</span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+        </button>
+
+        <div class="login-hint">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+          <span>Default credentials: <strong>admin</strong> / <strong>horizoon2026</strong></span>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       2. ADMIN MAIN INTERFACE
+       ======================================================================== -->
+  <div id="admin-app" class="admin-app" style="display: none;">
+
+    <!-- Sidebar Navigation -->
+    <aside class="admin-sidebar">
+      <div class="sidebar-header">
+        <a href="../index.html" target="_blank" class="sidebar-brand" title="View Public Website">
+          <img src="../assets/images/logo.png" alt="The Horizoon">
+        </a>
+        <span class="badge badge-admin">SEO Admin</span>
+      </div>
+
+      <nav class="sidebar-nav">
+        <button class="nav-item active" data-tab="dashboard">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect></svg>
+          <span>Dashboard</span>
+        </button>
+
+        <button class="nav-item" data-tab="editor" id="nav-btn-write">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+          <span>Write New Post</span>
+        </button>
+
+        <button class="nav-item" data-tab="articles">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+          <span>All Articles</span>
+        </button>
+
+        <button class="nav-item" data-tab="analytics">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+          <span>View Analytics</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <a href="../index.html" target="_blank" class="btn btn-outline btn-sm btn-block" style="text-align: center; justify-content: center; gap: 0.5rem;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+          <span>Live Site ↗</span>
+        </a>
+        <button id="btn-logout" class="btn-logout" title="Sign Out">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+          <span>Logout</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="admin-main">
+
+      <!-- Top Bar -->
+      <header class="admin-topbar">
+        <div class="topbar-left">
+          <h1 id="page-title">Dashboard Overview</h1>
+          <p class="topbar-subtitle" id="page-subtitle">Welcome back, Editor. Here is your publication heartbeat.</p>
+        </div>
+
+        <div class="topbar-right">
+          <a href="../sitemap.xml" target="_blank" class="topbar-link-pill" title="View dynamic SEO sitemap">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+            <span>Sitemap.xml</span>
+          </a>
+          <button class="btn btn-primary" id="topbar-write-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            <span>Write New Post</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- TAB 1: DASHBOARD OVERVIEW -->
+      <section id="tab-dashboard" class="tab-pane active">
+        <!-- Metric Cards Grid -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon stat-icon-views">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+            </div>
+            <div class="stat-details">
+              <span class="stat-label">Total Post Views</span>
+              <h2 class="stat-value" id="stat-total-views">0</h2>
+              <span class="stat-trend positive">↑ Organic Traffic</span>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon stat-icon-posts">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+            </div>
+            <div class="stat-details">
+              <span class="stat-label">Published Articles</span>
+              <h2 class="stat-value" id="stat-total-posts">0</h2>
+              <span class="stat-subtext">Active on search engines</span>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon stat-icon-avg">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 14 14"></polyline></svg>
+            </div>
+            <div class="stat-details">
+              <span class="stat-label">Avg. Views / Article</span>
+              <h2 class="stat-value" id="stat-avg-views">0</h2>
+              <span class="stat-subtext">Reader engagement</span>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon stat-icon-top">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+            </div>
+            <div class="stat-details">
+              <span class="stat-label">Top Trending Article</span>
+              <h4 class="stat-top-title" id="stat-top-title">—</h4>
+              <span class="stat-top-views" id="stat-top-views">0 views</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Top Performing Posts Table -->
+        <div class="panel-card">
+          <div class="panel-card-header">
+            <div>
+              <h3 class="panel-title">Top Performing Articles by Views</h3>
+              <p class="panel-subtitle">These stories are driving the strongest organic search traffic</p>
+            </div>
+            <button class="btn btn-secondary btn-sm" onclick="switchTab('articles')">View All Articles</button>
+          </div>
+
+          <div class="table-responsive">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Article</th>
+                  <th>Category</th>
+                  <th>Total Views</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="top-posts-tbody">
+                <!-- Dynamically populated via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 2: ARTICLES MANAGEMENT -->
+      <section id="tab-articles" class="tab-pane">
+        <div class="panel-card">
+          <div class="panel-toolbar">
+            <div class="toolbar-search">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+              <input type="text" id="articles-search-input" placeholder="Search by title, keyword, or tag...">
+            </div>
+
+            <div class="toolbar-filters">
+              <select id="articles-category-filter">
+                <option value="all">All Categories</option>
+                <option value="travel">Travel</option>
+                <option value="food">Food</option>
+                <option value="health">Health</option>
+                <option value="productivity">Productivity</option>
+                <option value="technology">Technology</option>
+                <option value="lifestyle">Lifestyle</option>
+                <option value="personal-finance">Personal Finance</option>
+                <option value="inspiration">Inspiration</option>
+              </select>
+
+              <select id="articles-sort-filter">
+                <option value="newest">Sort: Newest First</option>
+                <option value="views">Sort: Most Viewed</option>
+                <option value="title">Sort: Title (A-Z)</option>
+              </select>
+
+              <button class="btn btn-primary" onclick="startNewArticle()">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                <span>Write Post</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th style="width: 70px;">Cover</th>
+                  <th>Title & Slug</th>
+                  <th>Category</th>
+                  <th>Views 👁️</th>
+                  <th>Date</th>
+                  <th>Status</th>
+                  <th style="text-align: right;">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="all-articles-tbody">
+                <!-- Dynamically rendered -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 3: WRITE / EDIT BLOG POST & SEO SUITE -->
+      <section id="tab-editor" class="tab-pane">
+        <form id="post-editor-form" class="editor-grid">
+          <input type="hidden" id="edit-post-id" value="">
+
+          <!-- Left Column: Editorial Content -->
+          <div class="editor-main-col">
+            <div class="panel-card">
+              <div class="editor-header-bar">
+                <h2 id="editor-heading">Create New Article</h2>
+                <div class="editor-header-actions">
+                  <button type="button" class="btn btn-secondary btn-sm" onclick="cancelEditor()">Discard</button>
+                  <button type="submit" class="btn btn-primary" id="btn-save-post">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                    <span id="btn-save-text">Publish Post</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Article Title -->
+              <div class="form-group">
+                <label for="post-title-input" class="label-required">Article Headline / Title</label>
+                <input type="text" id="post-title-input" required placeholder="e.g., Solo Travel in 2026: Safe, Inspiring, and Budget-Savvy Explorations" class="form-input-lg">
+                <span class="field-hint">A strong, compelling headline increases click-through rates by up to 40%.</span>
+              </div>
+
+              <!-- Clean SEO Slug -->
+              <div class="form-group">
+                <label for="post-slug-input" class="label-required">SEO Friendly URL Slug</label>
+                <div class="input-prefix-wrap">
+                  <span class="input-prefix">thehorizoon.com/post/</span>
+                  <input type="text" id="post-slug-input" required placeholder="solo-travel-guide-2026">
+                </div>
+                <span class="field-hint">Auto-generated from title. Short, hyphenated, and contains target keywords.</span>
+              </div>
+
+              <!-- Excerpt / Summary -->
+              <div class="form-group">
+                <label for="post-summary-input" class="label-required">Article Excerpt / Quick Summary</label>
+                <textarea id="post-summary-input" rows="3" required placeholder="Write a concise 2-sentence summary that hooks readers on archive cards and social previews..."></textarea>
+              </div>
+
+              <!-- Featured Image & Mandatory Alt Text -->
+              <div class="featured-image-box">
+                <div class="featured-img-header">
+                  <div>
+                    <label class="label-required">Featured Image & Mandatory ALT Text (SEO)</label>
+                    <p class="field-hint">Search engines cannot "see" images—they rely on descriptive ALT text to rank in Google Images and understand page relevance.</p>
+                  </div>
+                </div>
+
+                <div class="featured-image-upload-row">
+                  <div class="img-preview-wrap">
+                    <img id="featured-image-preview" src="../assets/images/featured-mindfulness.jpg" alt="Featured Preview">
+                  </div>
+
+                  <div class="img-controls-col">
+                    <div class="form-group">
+                      <label for="post-image-url">Image URL or Upload File</label>
+                      <input type="text" id="post-image-url" value="assets/images/featured-mindfulness.jpg" placeholder="assets/images/... or https://...">
+                    </div>
+
+                    <div class="upload-btn-wrap">
+                      <label class="btn btn-secondary btn-sm" for="file-upload-input" style="cursor: pointer;">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                        <span>Upload New Image</span>
+                      </label>
+                      <input type="file" id="file-upload-input" accept="image/*" style="display: none;">
+                      <span id="upload-status-text" class="upload-status"></span>
+                    </div>
+
+                    <!-- Mandatory Alt Text Field -->
+                    <div class="form-group" style="margin-top: 1rem;">
+                      <label for="post-image-alt" class="label-required">Image Alt Text (SEO Accessibility)</label>
+                      <input type="text" id="post-image-alt" required placeholder="e.g. Solo traveler standing on coastal cliffs overlooking sunlit turquoise waters">
+                      <span class="field-hint">Be specific. Describe what is happening in the picture.</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Rich Text Formatting Toolbar -->
+              <div class="form-group" style="margin-top: 1.5rem;">
+                <label for="post-content-input" class="label-required">Article Body Content</label>
+                <div class="editor-toolbar">
+                  <button type="button" class="toolbar-btn" data-tag="h1" title="Main Heading (H1)"><strong>H1</strong></button>
+                  <button type="button" class="toolbar-btn" data-tag="h2" title="Section Heading (H2)"><strong>H2</strong></button>
+                  <button type="button" class="toolbar-btn" data-tag="h3" title="Subheading (H3)"><strong>H3</strong></button>
+                  <button type="button" class="toolbar-btn" data-tag="b" title="Bold Text"><b>B</b></button>
+                  <button type="button" class="toolbar-btn" data-tag="i" title="Italic Text"><i>I</i></button>
+                  <button type="button" class="toolbar-btn" data-tag="blockquote" title="Quote Box">❝❞</button>
+                  <button type="button" class="toolbar-btn" data-tag="ul" title="Bullet List">• List</button>
+                  <button type="button" class="toolbar-btn" data-tag="ol" title="Numbered List">1. List</button>
+                  <button type="button" class="toolbar-btn" data-tag="callout" title="Callout Box">Box</button>
+                  <button type="button" class="toolbar-btn" data-tag="link" title="Insert Link">🔗 Link</button>
+                  <button type="button" class="toolbar-btn" data-tag="img" title="Insert Image with Alt Text">🖼️ Image</button>
+                  <div class="toolbar-stats" id="content-word-count">0 words • ~0 min read</div>
+                </div>
+
+                <textarea id="post-content-input" rows="18" required placeholder="Write your full article using HTML formatting or the toolbar buttons above (H2 headings, quotes, lists, high-authority external links)..."></textarea>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Column: SEO Settings & Google SERP Preview -->
+          <div class="editor-sidebar-col">
+
+            <!-- Publish Settings Card -->
+            <div class="panel-card">
+              <h3 class="panel-title-sm">Publishing Settings</h3>
+              
+              <div class="form-group">
+                <label for="post-status-select">Status</label>
+                <select id="post-status-select">
+                  <option value="published">Published (Live to World)</option>
+                  <option value="draft">Draft (Private)</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="post-category-select">Category</label>
+                <select id="post-category-select">
+                  <option value="Lifestyle">Lifestyle</option>
+                  <option value="Travel">Travel</option>
+                  <option value="Food">Food</option>
+                  <option value="Health">Health</option>
+                  <option value="Productivity">Productivity</option>
+                  <option value="Technology">Technology</option>
+                  <option value="Personal Finance">Personal Finance</option>
+                  <option value="Inspiration">Inspiration</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="post-tags-input">SEO Keywords / Tags (Comma separated)</label>
+                <input type="text" id="post-tags-input" placeholder="Mindfulness, Mental Health, Habits">
+              </div>
+            </div>
+
+            <!-- Author Identity & Custom Profile Card -->
+            <div class="panel-card author-panel-card">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h3 class="panel-title-sm" style="margin: 0;">Author Identity</h3>
+                <span style="font-size: 0.72rem; background: var(--adm-primary-light); color: var(--adm-primary); padding: 0.2rem 0.6rem; border-radius: 999px; font-weight: 700;">Customizable</span>
+              </div>
+
+              <div class="form-group">
+                <label for="post-author-select">Quick Author Preset</label>
+                <select id="post-author-select">
+                  <option value="custom">✍️ Custom Author (Self / Guest Writer)</option>
+                  <option value="elena">Elena Vance (Senior Wellness & Lifestyle Editor)</option>
+                  <option value="marcus">Marcus Thorne (Productivity Strategist & Tech Columnist)</option>
+                  <option value="sophia">Sophia Lin (Culinary Nutritionist & Slow Travel Writer)</option>
+                  <option value="team">The Horizoon Editorial Team</option>
+                </select>
+                <span class="field-hint">Select a preset or customize your author name & photo below.</span>
+              </div>
+
+              <!-- Author Avatar Upload & Live Preview -->
+              <div class="form-group">
+                <label>Author Photo / Avatar</label>
+                <div style="display: flex; gap: 1rem; align-items: center; padding: 0.85rem; background: #F8FAFC; border: 1px solid var(--adm-border); border-radius: var(--adm-radius-sm);">
+                  <div style="width: 58px; height: 58px; flex-shrink: 0; border-radius: 50%; overflow: hidden; border: 2px solid var(--adm-border); background: #E2E8F0;">
+                    <img id="author-avatar-preview" src="../assets/images/avatar-elena.jpg" alt="Author avatar preview" style="width: 100%; height: 100%; object-fit: cover;">
+                  </div>
+                  <div style="flex: 1;">
+                    <label class="btn btn-secondary btn-sm" for="author-avatar-file" style="cursor: pointer; display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.35rem 0.75rem; font-size: 0.82rem;">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                      <span>Upload Author Photo</span>
+                    </label>
+                    <input type="file" id="author-avatar-file" accept="image/*" style="display: none;">
+                    <div id="author-avatar-status" class="field-hint" style="margin-top: 0.35rem;">Supports JPG, PNG, WebP</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="author-name-input" class="label-required">Author Full Name</label>
+                <input type="text" id="author-name-input" required placeholder="e.g. Vikas Sharma">
+                <span class="field-hint">Appears in header, byline, author box & Google Schema.</span>
+              </div>
+
+              <div class="form-group">
+                <label for="author-role-input">Author Role / Designation</label>
+                <input type="text" id="author-role-input" placeholder="e.g. Founder & Chief Columnist">
+              </div>
+
+              <div class="form-group">
+                <label for="author-avatar-url">Author Photo URL or Path</label>
+                <input type="text" id="author-avatar-url" placeholder="assets/uploads/... or https://...">
+              </div>
+
+              <div class="form-group" style="margin-bottom: 0;">
+                <label for="author-bio-input">Author Short Bio (Written By Box)</label>
+                <textarea id="author-bio-input" rows="3" placeholder="Brief author bio explaining background or expertise for readers..."></textarea>
+              </div>
+            </div>
+
+            <!-- SEO Live Optimizer Suite -->
+            <div class="panel-card seo-card">
+              <div class="seo-card-header">
+                <div class="seo-title-wrap">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                  <h3 class="panel-title-sm">SEO Live Optimizer</h3>
+                </div>
+                <div class="seo-score-badge" id="seo-score-badge">85% Score</div>
+              </div>
+
+              <div class="form-group">
+                <label for="seo-focus-keyword">Focus Target Keyphrase</label>
+                <input type="text" id="seo-focus-keyword" placeholder="e.g. solo travel 2026">
+                <span class="field-hint">The main term you want Google readers to find this article by.</span>
+              </div>
+
+              <div class="form-group">
+                <div class="label-with-counter">
+                  <label for="seo-meta-title">SEO Meta Title</label>
+                  <span id="meta-title-counter" class="char-counter">0 / 60</span>
+                </div>
+                <input type="text" id="seo-meta-title" placeholder="Catchy title under 60 characters for Google">
+              </div>
+
+              <div class="form-group">
+                <div class="label-with-counter">
+                  <label for="seo-meta-desc">SEO Meta Description</label>
+                  <span id="meta-desc-counter" class="char-counter">0 / 160</span>
+                </div>
+                <textarea id="seo-meta-desc" rows="3" placeholder="Engaging summary under 160 characters for Google search snippets"></textarea>
+              </div>
+
+              <!-- Google SERP Live Snippet Preview -->
+              <div class="serp-preview-box">
+                <div class="serp-preview-header">
+                  <span>Google Search Result Preview</span>
+                  <span class="serp-badge">Mobile & Desktop</span>
+                </div>
+                <div class="serp-card">
+                  <div class="serp-url-row">
+                    <img src="../assets/images/logo.png" alt="Favicon" class="serp-favicon">
+                    <div class="serp-url-text">
+                      <span class="serp-site-name">The Horizoon</span>
+                      <span class="serp-url-path" id="serp-url-display">https://thehorizoon.com › post › solo-travel-guide-2026</span>
+                    </div>
+                  </div>
+                  <h4 class="serp-title" id="serp-title-display">Solo Travel in 2026: Safe & Budget-Savvy Guide | The Horizoon</h4>
+                  <p class="serp-snippet" id="serp-desc-display">Master solo travel in 2026 with verified safety protocols, immersive budgeting hacks, and transformative itineraries. Read the complete guide.</p>
+                </div>
+              </div>
+
+              <!-- Real-time SEO Health Checklist -->
+              <div class="seo-checklist">
+                <h4 class="seo-checklist-title">SEO Quality Checklist</h4>
+                <div class="checklist-item" id="check-keyword-title">
+                  <span class="check-icon">⚪</span>
+                  <span>Focus keyword in Title</span>
+                </div>
+                <div class="checklist-item" id="check-keyword-slug">
+                  <span class="check-icon">⚪</span>
+                  <span>Focus keyword in URL Slug</span>
+                </div>
+                <div class="checklist-item" id="check-keyword-desc">
+                  <span class="check-icon">⚪</span>
+                  <span>Focus keyword in Meta Description</span>
+                </div>
+                <div class="checklist-item" id="check-image-alt">
+                  <span class="check-icon">⚪</span>
+                  <span>Image ALT text provided for search indexing</span>
+                </div>
+                <div class="checklist-item" id="check-word-count">
+                  <span class="check-icon">⚪</span>
+                  <span>Article length (>800 words recommended)</span>
+                </div>
+                <div class="checklist-item" id="check-headings">
+                  <span class="check-icon">⚪</span>
+                  <span>Headings (H2/H3) used for structured readability</span>
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+        </form>
+      </section>
+
+      <!-- TAB 4: VIEWER ANALYTICS -->
+      <section id="tab-analytics" class="tab-pane">
+        <div class="panel-card">
+          <div class="panel-card-header">
+            <div>
+              <h3 class="panel-title">Reader Engagement & Organic Traffic</h3>
+              <p class="panel-subtitle">Comprehensive breakdown of views, reader interest, and content performance</p>
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Rank</th>
+                  <th>Article Title</th>
+                  <th>Category</th>
+                  <th>Total Readers / Views</th>
+                  <th>Estimated Read Time</th>
+                  <th>Performance Bar</th>
+                </tr>
+              </thead>
+              <tbody id="analytics-tbody">
+                <!-- Dynamically injected via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- ========================================================================
+       MODALS: LINK INSERTION & IMAGE INSERTION (WITH MANDATORY ALT TEXT)
+       ======================================================================== -->
+  <!-- Link Modal -->
+  <div id="link-modal" class="admin-modal-backdrop" style="display: none;">
+    <div class="admin-modal-dialog">
+      <div class="admin-modal-header">
+        <div class="modal-title-wrap">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--adm-primary);"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+          <h3>Insert Link</h3>
+        </div>
+        <button type="button" class="modal-close-btn" id="btn-close-link-modal" aria-label="Close">✕</button>
+      </div>
+      <div class="admin-modal-body">
+        <div class="form-group">
+          <label for="modal-link-text">Display Text</label>
+          <input type="text" id="modal-link-text" placeholder="e.g. read our wellness guide">
+        </div>
+        <div class="form-group">
+          <label for="modal-link-url" class="label-required">Destination URL</label>
+          <input type="text" id="modal-link-url" placeholder="https://example.com or post.html?slug=...">
+          <span class="field-hint">Can be an external URL (https://) or internal link (post.html?slug=xyz).</span>
+        </div>
+        <div class="form-group-checkbox">
+          <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+            <input type="checkbox" id="modal-link-target" checked style="width: auto;">
+            <span style="font-size: 0.88rem; font-weight: 600;">Open in new tab (target="_blank" rel="noopener")</span>
+          </label>
+        </div>
+      </div>
+      <div class="admin-modal-footer">
+        <button type="button" class="btn btn-secondary" id="btn-cancel-link">Cancel</button>
+        <button type="button" class="btn btn-primary" id="btn-confirm-link">Insert Link</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Image Modal -->
+  <div id="image-modal" class="admin-modal-backdrop" style="display: none;">
+    <div class="admin-modal-dialog" style="max-width: 520px;">
+      <div class="admin-modal-header">
+        <div class="modal-title-wrap">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color: var(--adm-primary);"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+          <h3>Insert Image with SEO ALT Text</h3>
+        </div>
+        <button type="button" class="modal-close-btn" id="btn-close-image-modal" aria-label="Close">✕</button>
+      </div>
+      <div class="admin-modal-body">
+        
+        <!-- Upload or URL -->
+        <div class="form-group">
+          <label for="modal-img-url" class="label-required">Image URL or Upload from Computer</label>
+          <div style="display: flex; gap: 0.5rem;">
+            <input type="text" id="modal-img-url" placeholder="assets/images/... or https://..." style="flex: 1;">
+            <label class="btn btn-secondary btn-sm" for="modal-file-upload" style="cursor: pointer; white-space: nowrap;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+              <span>Upload</span>
+            </label>
+            <input type="file" id="modal-file-upload" accept="image/*" style="display: none;">
+          </div>
+          <span id="modal-upload-status" class="field-hint" style="color: var(--adm-primary);"></span>
+        </div>
+
+        <!-- Image Preview -->
+        <div class="form-group" id="modal-img-preview-wrap" style="display: none;">
+          <label>Preview</label>
+          <div style="max-height: 160px; overflow: hidden; border-radius: var(--adm-radius-sm); border: 1px solid var(--adm-border);">
+            <img id="modal-img-preview" src="" alt="Preview" style="width: 100%; height: auto; display: block; object-fit: cover;">
+          </div>
+        </div>
+
+        <!-- Mandatory SEO Alt Text -->
+        <div class="form-group">
+          <label for="modal-img-alt" class="label-required">Image ALT Text (Mandatory for SEO)</label>
+          <input type="text" id="modal-img-alt" required placeholder="e.g. Person meditating in morning sunlight overlooking nature">
+          <span class="field-hint">Google uses this text to index the image and understand page relevance.</span>
+        </div>
+
+        <!-- Optional Caption -->
+        <div class="form-group">
+          <label for="modal-img-caption">Image Caption (Optional)</label>
+          <input type="text" id="modal-img-caption" placeholder="Short caption to display below the image">
+        </div>
+
+      </div>
+      <div class="admin-modal-footer">
+        <button type="button" class="btn btn-secondary" id="btn-cancel-image">Cancel</button>
+        <button type="button" class="btn btn-primary" id="btn-confirm-image">Insert Image</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="admin-toast" class="admin-toast"></div>
+
+  <!-- Scripts -->
+  <script src="admin.js"></script>
+</body>
+</html>

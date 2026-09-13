@@ -100,7 +100,7 @@ export const AUTHORS = {
   elena: {
     name: "Elena Vance",
     role: "Senior Wellness & Lifestyle Editor",
-    bio: "Elena Vance is a mindfulness researcher, certified somatic practitioner, and author of *The Quiet Horizon*. She writes on mental health, intentional living, and emotional restoration.",
+    bio: "Elena Vance is a mindfulness researcher, certified somatic practitioner, and author of *The Quiet Horizoon*. She writes on mental health, intentional living, and emotional restoration.",
     avatar: "assets/images/avatar-elena.jpg"
   },
   marcus: {
@@ -128,7 +128,7 @@ export const HERO_SLIDES = [
     quoteCaption: "Good Ideas Brighter Days ♡"
   },
   {
-    eyebrow: "MINDSET • HABITS • FRESH HORIZONS",
+    eyebrow: "MINDSET • HABITS • FRESH HORIZOONS",
     title: "Awaken to Mindful Mornings & Purpose",
     description: "Transform your first quiet hour into a sanctuary of clarity, calm, and grounded energy that fuels your entire day.",
     ctaText: "Read Morning Guide →",
@@ -682,7 +682,7 @@ export const ARTICLES = [
       </ul>
 
       <h2>A New Definition of Strength</h2>
-      <p>True strength is not measured by how much strain you can bear before breaking; it is revealed by your wisdom to pause before exhaustion strikes. When you honor your need for rest, you step off the frantic treadmill of modern anxiety and align yourself with the natural rhythms of life—rising with fresh vigor to meet every new horizon.</p>
+      <p>True strength is not measured by how much strain you can bear before breaking; it is revealed by your wisdom to pause before exhaustion strikes. When you honor your need for rest, you step off the frantic treadmill of modern anxiety and align yourself with the natural rhythms of life—rising with fresh vigor to meet every new Horizoon.</p>
     `
   }
 ];

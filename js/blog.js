@@ -10,9 +10,22 @@ let currentSort = 'newest';
 let currentPage = 1;
 const POSTS_PER_PAGE = 6;
 
-export function initBlogPage() {
+let activeArticles = [...ARTICLES];
+
+export async function initBlogPage() {
   const grid = document.getElementById('blog-posts-grid');
   if (!grid) return;
+
+  // Try fetching dynamic posts from API
+  try {
+    const res = await fetch('/api/posts?status=published');
+    const data = await res.json();
+    if (data.success && data.posts && data.posts.length > 0) {
+      activeArticles = data.posts;
+    }
+  } catch (e) {
+    console.warn('Using static ARTICLES fallback on blog page:', e);
+  }
 
   // Check URL params for category or search
   const urlParams = new URLSearchParams(window.location.search);
@@ -79,29 +92,29 @@ function renderBlogPosts() {
   const countEl = document.getElementById('blog-results-count');
   if (!grid) return;
 
-  let filtered = [...ARTICLES];
+  let filtered = [...activeArticles];
 
   // Category filter
   if (currentCategory !== 'all') {
-    filtered = filtered.filter(a => a.categorySlug === currentCategory);
+    filtered = filtered.filter(a => (a.categorySlug || '').toLowerCase() === currentCategory.toLowerCase() || (a.category || '').toLowerCase() === currentCategory.toLowerCase());
   }
 
   // Search query filter
   if (currentSearch) {
     filtered = filtered.filter(a =>
-      a.title.toLowerCase().includes(currentSearch) ||
-      a.summary.toLowerCase().includes(currentSearch) ||
-      a.tags.some(t => t.toLowerCase().includes(currentSearch))
+      (a.title || '').toLowerCase().includes(currentSearch) ||
+      (a.summary || '').toLowerCase().includes(currentSearch) ||
+      (a.tags || []).some(t => t.toLowerCase().includes(currentSearch))
     );
   }
 
   // Sort
   if (currentSort === 'newest') {
-    filtered.sort((a, b) => new Date(b.isoDate) - new Date(a.isoDate));
+    filtered.sort((a, b) => new Date(b.createdAt || b.isoDate || b.date) - new Date(a.createdAt || a.isoDate || a.date));
   } else if (currentSort === 'oldest') {
-    filtered.sort((a, b) => new Date(a.isoDate) - new Date(b.isoDate));
+    filtered.sort((a, b) => new Date(a.createdAt || a.isoDate || a.date) - new Date(b.createdAt || b.isoDate || b.date));
   } else if (currentSort === 'reading-time') {
-    filtered.sort((a, b) => parseInt(b.readTime) - parseInt(a.readTime));
+    filtered.sort((a, b) => parseInt(b.readTime || 0) - parseInt(a.readTime || 0));
   }
 
   if (countEl) {
@@ -138,7 +151,7 @@ function renderBlogPosts() {
     <article class="latest-card blog-feed-card">
       <div class="latest-thumb-wrap">
         <a href="post.html?slug=${post.slug}">
-          <img src="${post.image}" alt="${post.title}" loading="lazy">
+          <img src="${post.image}" alt="${post.imageAlt || post.title}" loading="lazy" onerror="this.src='assets/images/featured-mindfulness.jpg'">
         </a>
       </div>
       <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.35rem;">
@@ -157,7 +170,7 @@ function renderBlogPosts() {
       </p>
       <div style="display: flex; align-items: center; justify-content: space-between; font-size: 0.8rem; color: var(--color-text-muted); margin-top: auto; padding-top: 0.5rem; border-top: 1px solid var(--color-border);">
         <span>${post.date}</span>
-        <span>${post.readTime}</span>
+        <span>${post.readTime || '8 min read'} • <strong style="color: var(--color-primary);">👁️ ${(post.views || 0).toLocaleString()}</strong></span>
       </div>
     </article>
   `).join('');

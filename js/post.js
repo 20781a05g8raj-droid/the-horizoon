@@ -6,11 +6,48 @@
 import { ARTICLES, MOCK_COMMENTS, SITE_CONFIG } from './data.js';
 import { showToast, toggleSaveArticle, getSavedSlugs } from './main.js';
 
-export function initSinglePost() {
-  const urlParams = new URLSearchParams(window.location.search);
-  const slug = urlParams.get('slug') || 'mindfulness-practices-daily-peace';
+export async function initSinglePost() {
+  let article = null;
+  let slug = '';
 
-  const article = ARTICLES.find(a => a.slug === slug) || ARTICLES[0];
+  // 1. Check if server preloaded post data in DOM
+  const serverDataScript = document.getElementById('__HORIZOON_INITIAL_POST__');
+  if (serverDataScript) {
+    try {
+      article = JSON.parse(serverDataScript.textContent);
+      slug = article.slug;
+    } catch (e) {}
+  }
+
+  // 2. Extract slug from URL pathname (/post/xyz) or query param (?slug=xyz)
+  if (!slug) {
+    const pathParts = window.location.pathname.split('/').filter(Boolean);
+    if (pathParts.length >= 2 && pathParts[pathParts.length - 2] === 'post') {
+      slug = pathParts[pathParts.length - 1];
+    } else {
+      const urlParams = new URLSearchParams(window.location.search);
+      slug = urlParams.get('slug') || 'mindfulness-practices-daily-peace';
+    }
+  }
+
+  // 3. Fetch from API if not already preloaded
+  if (!article) {
+    try {
+      const res = await fetch(`/api/posts/${slug}`);
+      const data = await res.json();
+      if (data.success && data.post) {
+        article = data.post;
+      }
+    } catch (e) {
+      console.warn('API fetch failed, falling back to static ARTICLES store:', e);
+    }
+  }
+
+  // Fallback to static data
+  if (!article) {
+    article = ARTICLES.find(a => a.slug === slug) || ARTICLES[0];
+  }
+
   if (!article) return;
 
   renderPostHeader(article);
@@ -24,13 +61,29 @@ export function initSinglePost() {
   setupCommentForm(article.slug);
   setupSaveButton(article.slug);
   injectArticleSchema(article);
+
+  // 4. Record View in Background and Update Counter
+  trackPostView(article.slug);
+}
+
+async function trackPostView(slug) {
+  try {
+    const res = await fetch(`/api/posts/${slug}/view`, { method: 'POST' });
+    const data = await res.json();
+    if (data.success && data.views !== undefined) {
+      const viewsEl = document.getElementById('post-views-count');
+      if (viewsEl) viewsEl.textContent = data.views.toLocaleString();
+    }
+  } catch (e) {
+    console.warn('Could not record post view:', e);
+  }
 }
 
 function renderPostHeader(article) {
-  document.title = `${article.seoTitle} | ${SITE_CONFIG.name}`;
+  document.title = `${article.seoTitle || article.title} | ${SITE_CONFIG.name}`;
   
   const metaDesc = document.querySelector('meta[name="description"]');
-  if (metaDesc) metaDesc.setAttribute('content', article.metaDesc);
+  if (metaDesc) metaDesc.setAttribute('content', article.metaDesc || article.summary);
 
   const breadcrumbCat = document.getElementById('post-breadcrumb-cat');
   if (breadcrumbCat) {
@@ -51,32 +104,84 @@ function renderPostHeader(article) {
   if (dateEl) dateEl.textContent = article.date;
 
   const readTimeEl = document.getElementById('post-read-time');
-  if (readTimeEl) readTimeEl.textContent = article.readTime;
+  if (readTimeEl) readTimeEl.textContent = article.readTime || '8 min read';
+
+  const viewsEl = document.getElementById('post-views-count');
+  if (viewsEl) viewsEl.textContent = (article.views || 0).toLocaleString();
 
   const authorNameEl = document.getElementById('post-author-name');
-  if (authorNameEl) authorNameEl.textContent = article.author.name;
+  if (authorNameEl) authorNameEl.textContent = article.author ? article.author.name : 'The Horizoon';
 
   const authorAvatarEl = document.getElementById('post-author-avatar');
-  if (authorAvatarEl) authorAvatarEl.src = article.author.avatar;
+  if (authorAvatarEl && article.author && article.author.avatar) {
+    const avatarSrc = (article.author.avatar.startsWith('http') || article.author.avatar.startsWith('/'))
+      ? article.author.avatar
+      : `/${article.author.avatar}`;
+    authorAvatarEl.src = avatarSrc;
+    authorAvatarEl.alt = article.author.name || 'Author avatar';
+  }
 
   const featuredImg = document.getElementById('post-featured-image');
-  if (featuredImg) {
-    featuredImg.src = article.image;
-    featuredImg.alt = article.imageAlt;
+  if (featuredImg && article.image) {
+    featuredImg.src = article.image.startsWith('http') || article.image.startsWith('/')
+      ? article.image
+      : `/${article.image}`;
+    featuredImg.alt = article.imageAlt || article.title;
   }
 }
 
 function renderPostBody(article) {
   const bodyEl = document.getElementById('post-body-content');
   if (bodyEl) {
-    bodyEl.innerHTML = article.content;
+    bodyEl.innerHTML = article.content || '';
+
+    // Auto-fix any link without protocol (e.g. google.com) so it opens the real external website
+    const links = bodyEl.querySelectorAll('a');
+    links.forEach(a => {
+      let rawHref = (a.getAttribute('href') || '').trim();
+      if (!rawHref || rawHref.startsWith('#') || rawHref.startsWith('javascript:')) return;
+
+      if (!/^(https?:\/\/|mailto:|tel:|\/|\/\/)/i.test(rawHref)) {
+        if (/^[a-zA-Z0-9_-]+\.html/i.test(rawHref)) {
+          a.setAttribute('href', '/' + rawHref);
+        } else {
+          // Domain like google.com, www.google.com
+          a.setAttribute('href', 'https://' + rawHref);
+          a.setAttribute('target', '_blank');
+          a.setAttribute('rel', 'noopener noreferrer');
+        }
+      } else if (/^https?:\/\//i.test(rawHref)) {
+        try {
+          const urlObj = new URL(rawHref);
+          if (urlObj.origin !== window.location.origin) {
+            a.setAttribute('target', '_blank');
+            a.setAttribute('rel', 'noopener noreferrer');
+          }
+        } catch (e) {}
+      }
+    });
+
+    // Safeguard click listener to intercept any rogue relative external link
+    bodyEl.addEventListener('click', (e) => {
+      const a = e.target.closest('a');
+      if (!a) return;
+      const href = (a.getAttribute('href') || '').trim();
+      if (!href || href.startsWith('#') || href.startsWith('javascript:')) return;
+
+      if (!/^(https?:\/\/|\/|mailto:|tel:|\/\/)/i.test(href)) {
+        e.preventDefault();
+        window.open('https://' + href, '_blank', 'noopener,noreferrer');
+      }
+    });
   }
 
   const tagsContainer = document.getElementById('post-tags-list');
-  if (tagsContainer && article.tags) {
+  if (tagsContainer && article.tags && article.tags.length > 0) {
     tagsContainer.innerHTML = article.tags.map(t => `
       <a href="blog.html?q=${encodeURIComponent(t)}" class="post-tag-item">#${t}</a>
     `).join('');
+  } else if (tagsContainer) {
+    tagsContainer.innerHTML = '';
   }
 }
 
@@ -84,12 +189,23 @@ function renderAuthorBio(article) {
   const authorBox = document.getElementById('post-author-box');
   if (!authorBox) return;
 
+  const author = article.author || {
+    name: 'The Horizoon Editorial Team',
+    role: 'Staff Writer',
+    bio: 'Editorial voice of The Horizoon bringing fresh perspectives on intentional living.',
+    avatar: 'assets/images/avatar-elena.jpg'
+  };
+
+  const avatarSrc = (author.avatar || '').startsWith('http') || (author.avatar || '').startsWith('/')
+    ? author.avatar
+    : `/${author.avatar || 'assets/images/avatar-elena.jpg'}`;
+
   authorBox.innerHTML = `
-    <img src="${article.author.avatar}" alt="${article.author.name}" class="author-bio-avatar">
+    <img src="${avatarSrc}" alt="${author.name}" class="author-bio-avatar">
     <div class="author-bio-content">
       <div class="author-bio-role">WRITTEN BY</div>
-      <h4 class="author-bio-name">${article.author.name}</h4>
-      <p class="author-bio-desc">${article.author.bio}</p>
+      <h4 class="author-bio-name">${author.name}</h4>
+      <p class="author-bio-desc">${author.bio}</p>
     </div>
   `;
 }
@@ -117,23 +233,40 @@ function setupTableOfContents() {
   const bodyEl = document.getElementById('post-body-content');
   if (!tocList || !bodyEl) return;
 
-  const headings = bodyEl.querySelectorAll('h2, h3');
+  const headings = bodyEl.querySelectorAll('h1, h2, h3');
+  const tocSection = document.getElementById('post-toc-wrapper');
+
   if (headings.length === 0) {
-    const tocSection = document.getElementById('post-toc-wrapper');
     if (tocSection) tocSection.style.display = 'none';
     return;
   }
+
+  if (tocSection) tocSection.style.display = 'block';
 
   tocList.innerHTML = '';
   headings.forEach((heading, idx) => {
     const id = `section-${idx}`;
     heading.id = id;
-    const isSub = heading.tagName.toLowerCase() === 'h3';
+    const tagName = heading.tagName.toLowerCase();
+    const isSub = tagName === 'h3';
 
     const li = document.createElement('li');
     li.className = `toc-item ${isSub ? 'toc-sub' : ''}`;
     li.innerHTML = `<a href="#${id}" class="toc-link">${heading.textContent}</a>`;
     tocList.appendChild(li);
+  });
+
+  // Smooth scroll offset click handler
+  tocList.querySelectorAll('.toc-link').forEach(link => {
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      const targetId = link.getAttribute('href').replace('#', '');
+      const targetEl = document.getElementById(targetId);
+      if (targetEl) {
+        const topOffset = targetEl.getBoundingClientRect().top + window.scrollY - 100;
+        window.scrollTo({ top: topOffset, behavior: 'smooth' });
+      }
+    });
   });
 
   // Active section spy
