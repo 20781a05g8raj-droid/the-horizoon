@@ -181,19 +181,34 @@ const INITIAL_ARTICLES = [
   }
 ];
 
+let inMemoryDb = null;
+
+function getActiveDbPath() {
+  if (process.env.VERCEL) {
+    const tmpPath = path.join('/tmp', 'db.json');
+    if (fs.existsSync(tmpPath)) {
+      return tmpPath;
+    }
+  }
+  return DB_PATH;
+}
+
 function readDb() {
-  if (!fs.existsSync(DB_PATH)) {
+  if (inMemoryDb) {
+    return inMemoryDb;
+  }
+
+  const activePath = getActiveDbPath();
+  if (!fs.existsSync(activePath) && !fs.existsSync(DB_PATH)) {
     const initialData = {
       posts: INITIAL_ARTICLES,
       categories: [
-        { id: "lifestyle", name: "Lifestyle", slug: "lifestyle" },
-        { id: "travel", name: "Travel", slug: "travel" },
-        { id: "food", name: "Food", slug: "food" },
-        { id: "health", name: "Health", slug: "health" },
-        { id: "productivity", name: "Productivity", slug: "productivity" },
-        { id: "technology", name: "Technology", slug: "technology" },
-        { id: "personal-finance", name: "Personal Finance", slug: "personal-finance" },
-        { id: "inspiration", name: "Inspiration", slug: "inspiration" }
+        { name: "Mindfulness", slug: "mindfulness" },
+        { name: "Travel", slug: "travel" },
+        { name: "Food", slug: "food" },
+        { name: "Productivity", slug: "productivity" },
+        { name: "Technology", slug: "technology" },
+        { name: "Lifestyle", slug: "lifestyle" }
       ],
       authors: [
         {
@@ -220,12 +235,15 @@ function readDb() {
       ]
     };
     writeDb(initialData);
+    inMemoryDb = initialData;
     return initialData;
   }
 
   try {
-    const raw = fs.readFileSync(DB_PATH, 'utf-8');
-    return JSON.parse(raw);
+    const targetFile = fs.existsSync(activePath) ? activePath : DB_PATH;
+    const raw = fs.readFileSync(targetFile, 'utf-8');
+    inMemoryDb = JSON.parse(raw);
+    return inMemoryDb;
   } catch (err) {
     console.error('Error reading db.json, returning empty store:', err);
     return { posts: [], categories: [], authors: [] };
@@ -233,11 +251,22 @@ function readDb() {
 }
 
 function writeDb(data) {
-  const dir = path.dirname(DB_PATH);
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
+  inMemoryDb = data;
+  try {
+    const dir = path.dirname(DB_PATH);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    fs.writeFileSync(DB_PATH, JSON.stringify(data, null, 2), 'utf-8');
+  } catch (err) {
+    // Read-only filesystem (e.g. Vercel serverless environment), fallback to /tmp
+    try {
+      const tmpPath = path.join('/tmp', 'db.json');
+      fs.writeFileSync(tmpPath, JSON.stringify(data, null, 2), 'utf-8');
+    } catch (tmpErr) {
+      console.warn('Could not write to /tmp, kept in memory:', tmpErr.message);
+    }
   }
-  fs.writeFileSync(DB_PATH, JSON.stringify(data, null, 2), 'utf-8');
 }
 
 export function getAllPosts({ category, search, sort = 'newest', status } = {}) {

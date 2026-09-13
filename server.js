@@ -36,7 +36,11 @@ app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Static asset handlers (supports both root and /post/:slug relative subpath)
+// Static asset handlers (supports both root, admin, and /post/:slug relative subpath)
+app.use('/admin', express.static(path.join(__dirname, 'admin')));
+app.get(['/admin', '/admin/'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'admin', 'index.html'));
+});
 app.use('/css', express.static(path.join(__dirname, 'css')));
 app.use('/assets', express.static(path.join(__dirname, 'assets')));
 app.use('/js', express.static(path.join(__dirname, 'js')));
@@ -527,11 +531,18 @@ app.get('/api/authors', (req, res) => {
 // ============================================================================
 app.use(express.static(__dirname));
 
-// Fallback to index.html
+// Fallback to static files or index.html
 app.get('*', (req, res) => {
   const filePath = path.join(__dirname, req.path);
-  if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
-    return res.sendFile(filePath);
+  if (fs.existsSync(filePath)) {
+    const stat = fs.statSync(filePath);
+    if (stat.isFile()) {
+      return res.sendFile(filePath);
+    }
+    const dirIndexPath = path.join(filePath, 'index.html');
+    if (fs.existsSync(dirIndexPath) && fs.statSync(dirIndexPath).isFile()) {
+      return res.sendFile(dirIndexPath);
+    }
   }
   res.sendFile(path.join(__dirname, 'index.html'));
 });
