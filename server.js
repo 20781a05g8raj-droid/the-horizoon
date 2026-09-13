@@ -17,7 +17,13 @@ import {
   getAuthors,
   syncWithSupabase
 } from './data/storage.js';
-import { checkSupabaseStatus } from './data/supabase.js';
+import {
+  checkSupabaseStatus,
+  saveCommentInSupabase,
+  getCommentsFromSupabase,
+  saveNewsletterSubscriber,
+  saveContactMessage
+} from './data/supabase.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -545,6 +551,41 @@ app.post('/api/supabase/sync', requireAuth, async (req, res) => {
     success: synced,
     message: synced ? 'Successfully synchronized with Supabase database!' : 'Could not sync. Ensure "posts" table is created in Supabase.'
   });
+});
+
+// Comments API (Stores in Supabase)
+app.get('/api/comments/:slug', async (req, res) => {
+  const comments = await getCommentsFromSupabase(req.params.slug);
+  res.json({ success: true, comments: comments || [] });
+});
+
+app.post('/api/comments', async (req, res) => {
+  const { postSlug, authorName, authorEmail, content } = req.body;
+  if (!postSlug || !authorName || !content) {
+    return res.status(400).json({ success: false, message: 'Missing required comment fields.' });
+  }
+  const saved = await saveCommentInSupabase({ postSlug, authorName, authorEmail, content });
+  res.status(201).json({ success: true, message: 'Comment submitted successfully!', comment: saved });
+});
+
+// Newsletter Subscription API (Stores in Supabase)
+app.post('/api/newsletter', async (req, res) => {
+  const { email, name } = req.body;
+  if (!email || !email.includes('@')) {
+    return res.status(400).json({ success: false, message: 'Valid email address required.' });
+  }
+  await saveNewsletterSubscriber(email, name);
+  res.json({ success: true, message: 'Subscribed successfully to The Horizoon Dispatch!' });
+});
+
+// Contact Form Inquiries API (Stores in Supabase)
+app.post('/api/contact', async (req, res) => {
+  const { name, email, subject, message } = req.body;
+  if (!name || !email || !message) {
+    return res.status(400).json({ success: false, message: 'Please fill out all required fields.' });
+  }
+  await saveContactMessage({ name, email, subject, message });
+  res.json({ success: true, message: 'Thank you for reaching out! Our editorial team will review your message.' });
 });
 
 // Try initial background sync with Supabase

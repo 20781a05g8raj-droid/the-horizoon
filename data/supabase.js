@@ -11,6 +11,33 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
 
 let isSupabaseAvailable = null;
 
+function normalizePostFromDb(row) {
+  if (!row) return null;
+  return {
+    id: row.id,
+    slug: row.slug,
+    title: row.title,
+    category: row.category,
+    categorySlug: row.categoryslug || row.categorySlug || (row.category || '').toLowerCase().replace(/\s+/g, '-'),
+    seoTitle: row.seotitle || row.seoTitle || row.title,
+    metaDesc: row.metadesc || row.metaDesc || row.summary,
+    summary: row.summary || '',
+    content: row.content || '',
+    image: row.image || 'assets/images/featured-mindfulness.jpg',
+    imageAlt: row.imagealt || row.imageAlt || row.title,
+    tags: Array.isArray(row.tags) ? row.tags : [],
+    author: typeof row.author === 'string' ? JSON.parse(row.author) : (row.author || {}),
+    views: Number(row.views) || 0,
+    status: row.status || 'published',
+    readTime: row.readtime || row.readTime || '8 min read',
+    wordsCount: Number(row.wordscount || row.wordsCount) || 1000,
+    date: row.date || '',
+    isoDate: row.isodate || row.isoDate || row.createdat || row.createdAt,
+    createdAt: row.createdat || row.createdAt || new Date().toISOString(),
+    updatedAt: row.updatedat || row.updatedAt || new Date().toISOString()
+  };
+}
+
 /**
  * Checks if Supabase table 'posts' is ready
  */
@@ -18,18 +45,12 @@ export async function checkSupabaseStatus() {
   try {
     const { data, error } = await supabase.from('posts').select('id').limit(1);
     if (error) {
-      if (error.code === 'PGRST205') {
-        console.warn('⚡ Supabase connected, but table "posts" does not exist yet.');
-      } else {
-        console.warn('⚡ Supabase query warning:', error.message);
-      }
       isSupabaseAvailable = false;
       return false;
     }
     isSupabaseAvailable = true;
     return true;
   } catch (err) {
-    console.warn('⚡ Supabase network check failed:', err.message);
     isSupabaseAvailable = false;
     return false;
   }
@@ -43,13 +64,13 @@ export async function getPostsFromSupabase() {
     const { data, error } = await supabase
       .from('posts')
       .select('*')
-      .order('createdAt', { ascending: false });
+      .order('createdat', { ascending: false });
 
     if (error) {
       console.warn('Supabase fetch error:', error.message);
       return null;
     }
-    return data;
+    return (data || []).map(normalizePostFromDb);
   } catch (err) {
     console.warn('Supabase getPosts exception:', err.message);
     return null;
@@ -66,23 +87,23 @@ export async function upsertPostInSupabase(post) {
       slug: post.slug,
       title: post.title,
       category: post.category || 'Lifestyle',
-      categorySlug: post.categorySlug || 'lifestyle',
-      seoTitle: post.seoTitle || post.title,
-      metaDesc: post.metaDesc || post.summary,
+      categoryslug: (post.categorySlug || post.category || 'lifestyle').toLowerCase().replace(/\s+/g, '-'),
+      seotitle: post.seoTitle || post.title,
+      metadesc: post.metaDesc || post.summary,
       summary: post.summary || '',
       content: post.content || '',
       image: post.image || 'assets/images/featured-mindfulness.jpg',
-      imageAlt: post.imageAlt || post.title,
+      imagealt: post.imageAlt || post.title,
       tags: Array.isArray(post.tags) ? post.tags : [],
       author: post.author || {},
       views: post.views || 0,
       status: post.status || 'published',
-      readTime: post.readTime || '8 min read',
-      wordsCount: post.wordsCount || 1000,
+      readtime: post.readTime || '8 min read',
+      wordscount: post.wordsCount || 1000,
       date: post.date || new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-      isoDate: post.isoDate || post.createdAt || new Date().toISOString(),
-      createdAt: post.createdAt || new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      isodate: post.isoDate || post.createdAt || new Date().toISOString(),
+      createdat: post.createdAt || new Date().toISOString(),
+      updatedat: new Date().toISOString()
     };
 
     const { data, error } = await supabase
@@ -95,7 +116,7 @@ export async function upsertPostInSupabase(post) {
       console.warn('Supabase upsert error:', error.message);
       return null;
     }
-    return data;
+    return normalizePostFromDb(data);
   } catch (err) {
     console.warn('Supabase upsert exception:', err.message);
     return null;
@@ -136,5 +157,82 @@ export async function incrementViewsInSupabase(slug, views) {
     return true;
   } catch (err) {
     return false;
+  }
+}
+
+// ============================================================================
+// Optional Additional Tables (Comments, Newsletter, Contact Inquiries)
+// ============================================================================
+
+export async function saveCommentInSupabase(comment) {
+  try {
+    const { data, error } = await supabase
+      .from('comments')
+      .insert({
+        id: `comment-${Date.now()}`,
+        post_slug: comment.postSlug || comment.slug,
+        author_name: comment.authorName || comment.name,
+        author_email: comment.authorEmail || comment.email || '',
+        content: comment.content || comment.comment,
+        created_at: new Date().toISOString()
+      })
+      .select()
+      .single();
+    if (error) return null;
+    return data;
+  } catch (e) {
+    return null;
+  }
+}
+
+export async function getCommentsFromSupabase(slug) {
+  try {
+    const { data, error } = await supabase
+      .from('comments')
+      .select('*')
+      .eq('post_slug', slug)
+      .order('created_at', { ascending: false });
+    if (error) return null;
+    return data;
+  } catch (e) {
+    return null;
+  }
+}
+
+export async function saveNewsletterSubscriber(email, name = '') {
+  try {
+    const { data, error } = await supabase
+      .from('subscribers')
+      .upsert({
+        email: email.trim().toLowerCase(),
+        name: name.trim(),
+        subscribed_at: new Date().toISOString()
+      }, { onConflict: 'email' })
+      .select()
+      .single();
+    if (error) return null;
+    return data;
+  } catch (e) {
+    return null;
+  }
+}
+
+export async function saveContactMessage(msg) {
+  try {
+    const { data, error } = await supabase
+      .from('contact_messages')
+      .insert({
+        name: msg.name,
+        email: msg.email,
+        subject: msg.subject || 'General Inquiry',
+        message: msg.message,
+        created_at: new Date().toISOString()
+      })
+      .select()
+      .single();
+    if (error) return null;
+    return data;
+  } catch (e) {
+    return null;
   }
 }
