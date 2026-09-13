@@ -24,7 +24,18 @@ export async function initBlogPage() {
       activeArticles = data.posts;
     }
   } catch (e) {
-    console.warn('Using static ARTICLES fallback on blog page:', e);
+    console.warn('API unavailable, checking local store:', e);
+  }
+
+  // Fallback to localStorage if available
+  if (activeArticles === ARTICLES || activeArticles.length === 0) {
+    try {
+      const local = JSON.parse(localStorage.getItem('horizoon_local_posts') || '[]');
+      const published = local.filter(p => p.status === 'published');
+      if (published.length > 0) {
+        activeArticles = published;
+      }
+    } catch (e) {}
   }
 
   // Check URL params for category or search

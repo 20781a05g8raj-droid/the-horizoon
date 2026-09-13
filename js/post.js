@@ -43,6 +43,15 @@ export async function initSinglePost() {
     }
   }
 
+  // 4. Fallback to localStorage (if published in Admin Studio)
+  if (!article) {
+    try {
+      const local = JSON.parse(localStorage.getItem('horizoon_local_posts') || '[]');
+      const found = local.find(a => a.slug === slug);
+      if (found) article = found;
+    } catch (e) {}
+  }
+
   // Fallback to static data
   if (!article) {
     article = ARTICLES.find(a => a.slug === slug) || ARTICLES[0];

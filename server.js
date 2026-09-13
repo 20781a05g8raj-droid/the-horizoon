@@ -14,8 +14,10 @@ import {
   incrementPostViews,
   getStats,
   getCategories,
-  getAuthors
+  getAuthors,
+  syncWithSupabase
 } from './data/storage.js';
+import { checkSupabaseStatus } from './data/supabase.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -525,6 +527,28 @@ app.get('/api/categories', (req, res) => {
 app.get('/api/authors', (req, res) => {
   res.json({ success: true, authors: getAuthors() });
 });
+
+// Supabase Status & Sync Endpoint
+app.get('/api/supabase/status', async (req, res) => {
+  const isConnected = await checkSupabaseStatus();
+  res.json({
+    success: true,
+    connected: isConnected,
+    project: 'inpwfukukgfjcphljoef',
+    message: isConnected ? 'Supabase database is connected & active.' : 'Supabase table "posts" needs to be created in SQL Editor.'
+  });
+});
+
+app.post('/api/supabase/sync', requireAuth, async (req, res) => {
+  const synced = await syncWithSupabase();
+  res.json({
+    success: synced,
+    message: synced ? 'Successfully synchronized with Supabase database!' : 'Could not sync. Ensure "posts" table is created in Supabase.'
+  });
+});
+
+// Try initial background sync with Supabase
+syncWithSupabase().catch(() => {});
 
 // ============================================================================
 // 4. SERVE STATIC ASSETS & HTML PAGES

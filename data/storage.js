@@ -1,6 +1,13 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import {
+  getPostsFromSupabase,
+  upsertPostInSupabase,
+  deletePostFromSupabase,
+  incrementViewsInSupabase,
+  checkSupabaseStatus
+} from './supabase.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -351,6 +358,7 @@ export function createPost(postData) {
 
   db.posts.unshift(newPost);
   writeDb(db);
+  upsertPostInSupabase(newPost).catch(() => {});
   return newPost;
 }
 
@@ -382,6 +390,7 @@ export function updatePost(id, updateData) {
 
   db.posts[index] = updated;
   writeDb(db);
+  upsertPostInSupabase(updated).catch(() => {});
   return updated;
 }
 
@@ -391,6 +400,7 @@ export function deletePost(id) {
   db.posts = db.posts.filter(p => p.id !== id && p.slug !== id);
   if (db.posts.length !== initialLength) {
     writeDb(db);
+    deletePostFromSupabase(id).catch(() => {});
     return true;
   }
   return false;
@@ -418,6 +428,7 @@ export function incrementPostViews(slug, clientIp = 'unknown') {
   if (post) {
     post.views = (post.views || 0) + 1;
     writeDb(db);
+    incrementViewsInSupabase(slug, post.views).catch(() => {});
     return post.views;
   }
   return 0;
@@ -458,4 +469,34 @@ export function getCategories() {
 export function getAuthors() {
   const db = readDb();
   return db.authors || [];
+}
+
+export async function syncWithSupabase() {
+  try {
+    const isReady = await checkSupabaseStatus();
+    if (!isReady) return false;
+
+    const remote = await getPostsFromSupabase();
+    if (remote && Array.isArray(remote) && remote.length > 0) {
+      const db = readDb();
+      const map = new Map();
+      db.posts.forEach(p => map.set(p.slug, p));
+      remote.forEach(p => map.set(p.slug, { ...map.get(p.slug), ...p }));
+      db.posts = Array.from(map.values());
+      writeDb(db);
+      console.log(`⚡ Synced ${remote.length} articles from Supabase!`);
+      return true;
+    } else if (remote && remote.length === 0) {
+      console.log('⚡ Supabase posts table is empty, auto-seeding default articles...');
+      const db = readDb();
+      for (const p of db.posts) {
+        await upsertPostInSupabase(p);
+      }
+      console.log(`⚡ Seeded ${db.posts.length} articles into Supabase!`);
+      return true;
+    }
+  } catch (err) {
+    console.warn('Supabase sync warning:', err.message);
+  }
+  return false;
 }
