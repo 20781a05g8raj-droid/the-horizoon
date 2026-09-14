@@ -88,6 +88,25 @@ async function trackPostView(slug) {
   }
 }
 
+export function resolveMediaUrl(url, fallback = 'assets/images/featured-mindfulness.jpg') {
+  if (!url || typeof url !== 'string' || !url.trim()) {
+    return fallback.startsWith('/') ? fallback : `/${fallback}`;
+  }
+  const trimmed = url.trim();
+  if (
+    trimmed.startsWith('data:') ||
+    trimmed.startsWith('blob:') ||
+    trimmed.startsWith('http://') ||
+    trimmed.startsWith('https://')
+  ) {
+    return trimmed;
+  }
+  if (trimmed.startsWith('/')) {
+    return trimmed;
+  }
+  return `/${trimmed}`;
+}
+
 function renderPostHeader(article) {
   document.title = `${article.seoTitle || article.title} | ${SITE_CONFIG.name}`;
   
@@ -123,19 +142,16 @@ function renderPostHeader(article) {
 
   const authorAvatarEl = document.getElementById('post-author-avatar');
   if (authorAvatarEl && article.author && article.author.avatar) {
-    const avatarSrc = (article.author.avatar.startsWith('http') || article.author.avatar.startsWith('/'))
-      ? article.author.avatar
-      : `/${article.author.avatar}`;
-    authorAvatarEl.src = avatarSrc;
+    authorAvatarEl.src = resolveMediaUrl(article.author.avatar, 'assets/images/avatar-elena.jpg');
     authorAvatarEl.alt = article.author.name || 'Author avatar';
+    authorAvatarEl.onerror = () => { authorAvatarEl.src = '/assets/images/avatar-elena.jpg'; };
   }
 
   const featuredImg = document.getElementById('post-featured-image');
   if (featuredImg && article.image) {
-    featuredImg.src = article.image.startsWith('http') || article.image.startsWith('/')
-      ? article.image
-      : `/${article.image}`;
+    featuredImg.src = resolveMediaUrl(article.image, 'assets/images/featured-mindfulness.jpg');
     featuredImg.alt = article.imageAlt || article.title;
+    featuredImg.onerror = () => { featuredImg.src = '/assets/images/featured-mindfulness.jpg'; };
   }
 }
 
@@ -205,12 +221,10 @@ function renderAuthorBio(article) {
     avatar: 'assets/images/avatar-elena.jpg'
   };
 
-  const avatarSrc = (author.avatar || '').startsWith('http') || (author.avatar || '').startsWith('/')
-    ? author.avatar
-    : `/${author.avatar || 'assets/images/avatar-elena.jpg'}`;
+  const avatarSrc = resolveMediaUrl(author.avatar, 'assets/images/avatar-elena.jpg');
 
   authorBox.innerHTML = `
-    <img src="${avatarSrc}" alt="${author.name}" class="author-bio-avatar">
+    <img src="${avatarSrc}" alt="${author.name}" class="author-bio-avatar" onerror="this.src='/assets/images/avatar-elena.jpg'">
     <div class="author-bio-content">
       <div class="author-bio-role">WRITTEN BY</div>
       <h4 class="author-bio-name">${author.name}</h4>
@@ -365,7 +379,7 @@ function renderRelatedPosts(currentArticle) {
     <article class="latest-card">
       <div class="latest-thumb-wrap">
         <a href="post.html?slug=${post.slug}">
-          <img src="${post.image}" alt="${post.title}" loading="lazy">
+          <img src="${resolveMediaUrl(post.image, 'assets/images/featured-mindfulness.jpg')}" alt="${post.title}" loading="lazy" onerror="this.src='/assets/images/featured-mindfulness.jpg'">
         </a>
       </div>
       <span class="latest-category">${post.category}</span>
@@ -482,6 +496,8 @@ function injectArticleSchema(article) {
   document.head.appendChild(script);
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-  initSinglePost();
-});
+if (typeof document !== 'undefined') {
+  document.addEventListener('DOMContentLoaded', () => {
+    initSinglePost();
+  });
+}

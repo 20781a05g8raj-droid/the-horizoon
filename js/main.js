@@ -321,22 +321,24 @@ function setupStickyHeader() {
 }
 
 // Global Bookmark Click Listener
-document.addEventListener('click', (e) => {
-  const saveBtn = e.target.closest('[data-save-slug]');
-  if (saveBtn) {
-    e.preventDefault();
-    e.stopPropagation();
-    const slug = saveBtn.getAttribute('data-save-slug');
-    toggleSaveArticle(slug);
-  }
-});
+if (typeof document !== 'undefined') {
+  document.addEventListener('click', (e) => {
+    const saveBtn = e.target.closest('[data-save-slug]');
+    if (saveBtn) {
+      e.preventDefault();
+      e.stopPropagation();
+      const slug = saveBtn.getAttribute('data-save-slug');
+      toggleSaveArticle(slug);
+    }
+  });
 
-// Initialize on DOMContentLoaded
-document.addEventListener('DOMContentLoaded', () => {
-  setupStickyHeader();
-  setupSearchModal();
-  setupSavedDrawer();
-  setupMobileNav();
-  setupNewsletterForms();
-  updateSavedUI();
-});
+  // Initialize on DOMContentLoaded
+  document.addEventListener('DOMContentLoaded', () => {
+    setupStickyHeader();
+    setupSearchModal();
+    setupSavedDrawer();
+    setupMobileNav();
+    setupNewsletterForms();
+    updateSavedUI();
+  });
+}

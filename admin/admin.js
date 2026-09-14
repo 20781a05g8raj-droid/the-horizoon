@@ -29,6 +29,78 @@ function showAdminToast(message, type = 'default') {
 }
 
 // ==========================================================================
+// Image URL Resolver & Client-Side Image Optimizer
+// ==========================================================================
+function resolveAdminImageUrl(url, defaultImg = '../assets/images/featured-mindfulness.jpg') {
+  if (!url || typeof url !== 'string' || !url.trim()) return defaultImg;
+  const trimmed = url.trim();
+  if (
+    trimmed.startsWith('data:') ||
+    trimmed.startsWith('blob:') ||
+    trimmed.startsWith('http://') ||
+    trimmed.startsWith('https://')
+  ) {
+    return trimmed;
+  }
+  if (trimmed.startsWith('../')) {
+    return trimmed;
+  }
+  return `../${trimmed.replace(/^\//, '')}`;
+}
+
+function compressImageFile(file, maxWidth = 1200, quality = 0.82) {
+  return new Promise((resolve, reject) => {
+    if (!file || !file.type.startsWith('image/')) {
+      return reject(new Error('Invalid image file'));
+    }
+    if (file.type === 'image/svg+xml' || file.type === 'image/gif') {
+      const reader = new FileReader();
+      reader.onload = (e) => resolve(e.target.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        let width = img.naturalWidth || img.width;
+        let height = img.naturalHeight || img.height;
+
+        if (width > maxWidth) {
+          height = Math.round((height * maxWidth) / width);
+          width = maxWidth;
+        }
+
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        ctx.drawImage(img, 0, 0, width, height);
+
+        let dataUrl;
+        try {
+          dataUrl = canvas.toDataURL('image/webp', quality);
+          if (!dataUrl || !dataUrl.startsWith('data:image/webp')) {
+            dataUrl = canvas.toDataURL('image/jpeg', quality);
+          }
+        } catch (err) {
+          dataUrl = canvas.toDataURL('image/jpeg', quality);
+        }
+        resolve(dataUrl);
+      };
+      img.onerror = reject;
+      img.src = e.target.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+// ==========================================================================
 // Local / Standalone Storage Store (Works offline & without external backend)
 // ==========================================================================
 const FALLBACK_KEY = 'horizoon_local_posts';
@@ -489,7 +561,7 @@ function renderArticlesTable(posts) {
   }
 
   tbody.innerHTML = posts.map(p => {
-    const imgUrl = p.image.startsWith('http') ? p.image : `../${p.image.replace(/^\//, '')}`;
+    const imgUrl = resolveAdminImageUrl(p.image, '../assets/images/featured-mindfulness.jpg');
     return `
       <tr>
         <td>
@@ -645,8 +717,7 @@ function applyAuthorPreset(key) {
   if (avatarUrlEl) avatarUrlEl.value = preset.avatar;
   if (selectEl) selectEl.value = key;
   if (avatarPreview) {
-    const src = preset.avatar.startsWith('http') ? preset.avatar : `../${preset.avatar.replace(/^\//, '')}`;
-    avatarPreview.src = src;
+    avatarPreview.src = resolveAdminImageUrl(preset.avatar, '../assets/images/avatar-elena.jpg');
   }
 }
 
@@ -718,15 +789,14 @@ window.editPost = function (id) {
     const aAvatar = post.author.avatar || 'assets/images/avatar-elena.jpg';
     const aPreview = document.getElementById('author-avatar-preview');
     if (aPreview) {
-      aPreview.src = aAvatar.startsWith('http') ? aAvatar : `../${aAvatar.replace(/^\//, '')}`;
+      aPreview.src = resolveAdminImageUrl(aAvatar, '../assets/images/avatar-elena.jpg');
     }
   } else {
     applyAuthorPreset('elena');
   }
 
   const imgPreview = document.getElementById('featured-image-preview');
-  const imgUrl = (post.image || '').startsWith('http') ? post.image : `../${(post.image || '').replace(/^\//, '')}`;
-  imgPreview.src = imgUrl;
+  imgPreview.src = resolveAdminImageUrl(post.image, '../assets/images/featured-mindfulness.jpg');
 
   document.getElementById('editor-heading').textContent = 'Edit Article & SEO';
   document.getElementById('btn-save-text').textContent = 'Update Article';
@@ -769,36 +839,34 @@ if (fileUploadInput) {
     const file = e.target.files[0];
     if (!file) return;
 
-    const formData = new FormData();
-    formData.append('image', file);
-
-    uploadStatusText.textContent = 'Uploading image...';
+    if (uploadStatusText) {
+      uploadStatusText.textContent = 'Optimizing & preparing image for database...';
+      uploadStatusText.style.color = 'var(--adm-primary)';
+    }
 
     try {
-      const res = await fetch(`${API_BASE}/api/upload`, {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${authToken}` },
-        body: formData
-      });
-      if (res.ok) {
-        const data = await res.json();
-        if (data.success) {
-          document.getElementById('post-image-url').value = data.url;
-          document.getElementById('featured-image-preview').src = `../${data.url}`;
-          uploadStatusText.textContent = '✓ Upload complete!';
-          uploadStatusText.style.color = 'var(--adm-success)';
-          showAdminToast('Image uploaded successfully!', 'success');
-
-          const altField = document.getElementById('post-image-alt');
-          if (altField && !altField.value.trim()) {
-            altField.focus();
-            showAdminToast('Important for SEO: Please provide descriptive ALT text.', 'default');
-          }
-          return;
-        }
+      // 1. Compress image client-side to ensure crisp, lightweight Base64 stored directly in Database
+      const dataUrl = await compressImageFile(file, 1200, 0.82);
+      document.getElementById('post-image-url').value = dataUrl;
+      const featuredImgPreview = document.getElementById('featured-image-preview');
+      if (featuredImgPreview) {
+        featuredImgPreview.src = dataUrl;
       }
+      if (uploadStatusText) {
+        uploadStatusText.textContent = '✓ Saved in post data!';
+        uploadStatusText.style.color = 'var(--adm-success)';
+      }
+      showAdminToast('Image optimized & ready for database storage!', 'success');
+
+      const altField = document.getElementById('post-image-alt');
+      if (altField && !altField.value.trim()) {
+        altField.focus();
+        showAdminToast('Important for SEO: Please provide descriptive ALT text.', 'default');
+      }
+      updateSeoLivePreview();
+      return;
     } catch (err) {
-      console.warn('Upload API unavailable, using DataURL fallback:', err);
+      console.warn('Canvas compression fallback to FileReader:', err);
     }
 
     // Local DataURL fallback
@@ -806,12 +874,18 @@ if (fileUploadInput) {
     reader.onload = (ev) => {
       const dataUrl = ev.target.result;
       document.getElementById('post-image-url').value = dataUrl;
-      document.getElementById('featured-image-preview').src = dataUrl;
-      uploadStatusText.textContent = '✓ Ready!';
-      uploadStatusText.style.color = 'var(--adm-success)';
-      showAdminToast('Image loaded successfully!', 'success');
+      const featuredImgPreview = document.getElementById('featured-image-preview');
+      if (featuredImgPreview) {
+        featuredImgPreview.src = dataUrl;
+      }
+      if (uploadStatusText) {
+        uploadStatusText.textContent = '✓ Image ready!';
+        uploadStatusText.style.color = 'var(--adm-success)';
+      }
+      showAdminToast('Image loaded for database storage!', 'success');
       const altField = document.getElementById('post-image-alt');
       if (altField && !altField.value.trim()) altField.focus();
+      updateSeoLivePreview();
     };
     reader.readAsDataURL(file);
   });
@@ -821,9 +895,9 @@ const imageUrlInput = document.getElementById('post-image-url');
 if (imageUrlInput) {
   imageUrlInput.addEventListener('input', () => {
     const val = imageUrlInput.value.trim();
-    if (val) {
-      const imgPreview = document.getElementById('featured-image-preview');
-      imgPreview.src = val.startsWith('http') ? val : `../${val.replace(/^\//, '')}`;
+    const imgPreview = document.getElementById('featured-image-preview');
+    if (imgPreview) {
+      imgPreview.src = resolveAdminImageUrl(val, '../assets/images/featured-mindfulness.jpg');
     }
     updateSeoLivePreview();
   });
@@ -854,39 +928,28 @@ if (authorAvatarFile) {
     const file = e.target.files[0];
     if (!file) return;
 
-    const formData = new FormData();
-    formData.append('image', file);
-
     if (authorAvatarStatus) {
-      authorAvatarStatus.textContent = 'Uploading photo...';
+      authorAvatarStatus.textContent = 'Optimizing author photo...';
       authorAvatarStatus.style.color = 'var(--adm-primary)';
     }
 
     try {
-      const res = await fetch(`${API_BASE}/api/upload`, {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${authToken}` },
-        body: formData
-      });
-      if (res.ok) {
-        const data = await res.json();
-        if (data.success) {
-          document.getElementById('author-avatar-url').value = data.url;
-          const avatarPreview = document.getElementById('author-avatar-preview');
-          if (avatarPreview) {
-            avatarPreview.src = `../${data.url}`;
-          }
-          if (authorSelect) authorSelect.value = 'custom';
-          if (authorAvatarStatus) {
-            authorAvatarStatus.textContent = '✓ Uploaded!';
-            authorAvatarStatus.style.color = 'var(--adm-success)';
-          }
-          showAdminToast('Author photo uploaded successfully!', 'success');
-          return;
-        }
+      // Compress avatar into lightweight Base64 Data URL (stored directly in DB)
+      const dataUrl = await compressImageFile(file, 350, 0.85);
+      document.getElementById('author-avatar-url').value = dataUrl;
+      const avatarPreview = document.getElementById('author-avatar-preview');
+      if (avatarPreview) {
+        avatarPreview.src = dataUrl;
       }
+      if (authorSelect) authorSelect.value = 'custom';
+      if (authorAvatarStatus) {
+        authorAvatarStatus.textContent = '✓ Saved in author data!';
+        authorAvatarStatus.style.color = 'var(--adm-success)';
+      }
+      showAdminToast('Author photo optimized & ready for database storage!', 'success');
+      return;
     } catch (err) {
-      console.warn('Avatar upload fallback to DataURL:', err);
+      console.warn('Avatar compression fallback to FileReader:', err);
     }
 
     const reader = new FileReader();
@@ -912,11 +975,9 @@ if (authorAvatarUrlInput) {
   authorAvatarUrlInput.addEventListener('input', () => {
     const val = authorAvatarUrlInput.value.trim();
     if (authorSelect) authorSelect.value = 'custom';
-    if (val) {
-      const avatarPreview = document.getElementById('author-avatar-preview');
-      if (avatarPreview) {
-        avatarPreview.src = val.startsWith('http') ? val : `../${val.replace(/^\//, '')}`;
-      }
+    const avatarPreview = document.getElementById('author-avatar-preview');
+    if (avatarPreview) {
+      avatarPreview.src = resolveAdminImageUrl(val, '../assets/images/avatar-elena.jpg');
     }
   });
 }
@@ -1097,40 +1158,28 @@ modalFileUpload?.addEventListener('change', async (e) => {
 
   const status = document.getElementById('modal-upload-status');
   if (status) {
-    status.textContent = 'Uploading image to server...';
+    status.textContent = 'Optimizing image for article...';
     status.style.color = 'var(--adm-primary)';
   }
 
-  const formData = new FormData();
-  formData.append('image', file);
-
   try {
-    const res = await fetch(`${API_BASE}/api/upload`, {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${authToken}` },
-      body: formData
-    });
-    if (res.ok) {
-      const data = await res.json();
-      if (data.success) {
-        document.getElementById('modal-img-url').value = data.url;
-        const previewWrap = document.getElementById('modal-img-preview-wrap');
-        const previewImg = document.getElementById('modal-img-preview');
-        if (previewWrap && previewImg) {
-          previewImg.src = `../${data.url}`;
-          previewWrap.style.display = 'block';
-        }
-        if (status) {
-          status.textContent = '✓ Uploaded successfully!';
-          status.style.color = 'var(--adm-success)';
-        }
-        document.getElementById('modal-img-alt')?.focus();
-        showAdminToast('Image uploaded! Please enter SEO Alt Text.', 'default');
-        return;
-      }
+    const dataUrl = await compressImageFile(file, 1000, 0.82);
+    document.getElementById('modal-img-url').value = dataUrl;
+    const previewWrap = document.getElementById('modal-img-preview-wrap');
+    const previewImg = document.getElementById('modal-img-preview');
+    if (previewWrap && previewImg) {
+      previewImg.src = dataUrl;
+      previewWrap.style.display = 'block';
     }
+    if (status) {
+      status.textContent = '✓ Image ready for database save!';
+      status.style.color = 'var(--adm-success)';
+    }
+    document.getElementById('modal-img-alt')?.focus();
+    showAdminToast('Image ready! Please enter SEO Alt Text.', 'default');
+    return;
   } catch (err) {
-    console.warn('Content image upload fallback:', err);
+    console.warn('Modal image optimization fallback:', err);
   }
 
   const reader = new FileReader();
@@ -1158,7 +1207,7 @@ document.getElementById('modal-img-url')?.addEventListener('input', (e) => {
   const previewWrap = document.getElementById('modal-img-preview-wrap');
   const previewImg = document.getElementById('modal-img-preview');
   if (val && previewWrap && previewImg) {
-    previewImg.src = val.startsWith('http') ? val : `../${val.replace(/^\//, '')}`;
+    previewImg.src = resolveAdminImageUrl(val, '../assets/images/featured-mindfulness.jpg');
     previewWrap.style.display = 'block';
   }
 });

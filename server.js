@@ -183,7 +183,10 @@ async function renderSeoPost(req, res) {
 
   if (post) {
     const postUrl = `${SITE_URL}/post/${post.slug}`;
-    const imageUrl = post.image.startsWith('http') ? post.image : `${SITE_URL}/${post.image.replace(/^\//, '')}`;
+    const isDataImg = (post.image || '').startsWith('data:') || (post.image || '').startsWith('blob:');
+    const imageUrl = isDataImg
+      ? `${SITE_URL}/assets/images/featured-mindfulness.jpg`
+      : (post.image.startsWith('http') ? post.image : `${SITE_URL}/${post.image.replace(/^\//, '')}`);
     const pageTitle = `${post.seoTitle || post.title} | The Horizoon`;
     const cleanDesc = (post.metaDesc || post.summary || '').replace(/"/g, '&quot;');
     const imageAlt = escapeHtml(post.imageAlt || post.title);
@@ -354,7 +357,10 @@ app.get('/sitemap.xml', async (req, res) => {
   <!-- Published Blog Posts (Rankable Single SEO Pages) -->
   ${posts.map(p => {
     const postDate = (p.updatedAt || p.createdAt || p.isoDate || today).split('T')[0];
-    const imageUrl = p.image.startsWith('http') ? p.image : `${SITE_URL}/${p.image.replace(/^\//, '')}`;
+    const isDataImg = (p.image || '').startsWith('data:') || (p.image || '').startsWith('blob:');
+    const imageUrl = isDataImg
+      ? `${SITE_URL}/assets/images/featured-mindfulness.jpg`
+      : (p.image.startsWith('http') ? p.image : `${SITE_URL}/${p.image.replace(/^\//, '')}`);
     return `
   <url>
     <loc>${SITE_URL}/post/${p.slug}</loc>
