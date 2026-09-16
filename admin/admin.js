@@ -231,7 +231,7 @@ function saveLocalStoredPosts(posts) {
 }
 
 // ==========================================================================
-// 2. Auth Flow (Login & Logout)
+// 2. Auth Flow (Login, Logout & Session Verification)
 // ==========================================================================
 async function initAuth() {
   if (authToken) {
@@ -242,18 +242,20 @@ async function initAuth() {
       if (res.ok) {
         const data = await res.json();
         if (data.success) {
+          if (data.email) {
+            const emailEl = document.getElementById('display-admin-email');
+            if (emailEl) emailEl.textContent = data.email;
+          }
           showAdminApp();
           return;
         }
       }
     } catch (e) {
-      console.warn('Backend verification bypassed, continuing session:', e);
+      console.warn('Session verification error:', e);
     }
-    // If backend is not connected or offline, keep valid session
-    if (authToken === 'hz-admin-secret-session-token-2026') {
-      showAdminApp();
-      return;
-    }
+    // Token invalid or expired
+    authToken = '';
+    localStorage.removeItem('hz_admin_token');
   }
   showLoginScreen();
 }
@@ -291,64 +293,184 @@ async function checkSupabaseUiStatus() {
   } catch (e) {}
 }
 
+// Login Form Submit
 const loginForm = document.getElementById('login-form');
 if (loginForm) {
   loginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const username = document.getElementById('login-username').value.trim();
-    const password = document.getElementById('login-password').value.trim();
+    const emailInput = document.getElementById('login-email');
+    const passwordInput = document.getElementById('login-password');
+    const email = (emailInput?.value || '').trim();
+    const password = (passwordInput?.value || '').trim();
     const errorBox = document.getElementById('login-error');
     const submitBtn = document.getElementById('btn-login-submit');
 
+    if (!email || !password) {
+      errorBox.textContent = 'Please enter both your Admin Email and Password.';
+      errorBox.style.display = 'block';
+      return;
+    }
+
     errorBox.style.display = 'none';
     submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span>Verifying credentials...</span>';
 
     try {
       const res = await fetch(`${API_BASE}/api/admin/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password })
+        body: JSON.stringify({ email, password })
       });
-      if (res.ok) {
-        const data = await res.json();
-        if (data.success) {
-          authToken = data.token;
-          localStorage.setItem('hz_admin_token', authToken);
-          showAdminApp();
-          showAdminToast('Welcome back, Editor!', 'success');
-          return;
-        } else {
-          errorBox.textContent = data.message || 'Invalid username or password.';
-          errorBox.style.display = 'block';
-          return;
+
+      const data = await res.json();
+
+      if (res.ok && data.success) {
+        authToken = data.token;
+        localStorage.setItem('hz_admin_token', authToken);
+        if (data.email) {
+          const emailEl = document.getElementById('display-admin-email');
+          if (emailEl) emailEl.textContent = data.email;
         }
+        if (passwordInput) passwordInput.value = '';
+        showAdminApp();
+        showAdminToast(`Authenticated via ${data.provider || 'Secure Engine'}`, 'success');
+        return;
+      } else {
+        errorBox.textContent = data.message || 'Invalid email or password. Access denied.';
+        errorBox.style.display = 'block';
       }
     } catch (err) {
-      // Backend not running / not connected - seamless offline fallback
+      errorBox.textContent = 'Could not connect to authentication server. Please check your connection.';
+      errorBox.style.display = 'block';
     } finally {
       submitBtn.disabled = false;
-    }
-
-    // Direct authentication fallback: Default admin credentials work instantly!
-    if (username === 'admin' && password === 'horizoon2026') {
-      authToken = 'hz-admin-secret-session-token-2026';
-      localStorage.setItem('hz_admin_token', authToken);
-      showAdminApp();
-      showAdminToast('Welcome back, Editor!', 'success');
-    } else {
-      errorBox.textContent = 'Invalid username or password. Default: admin / horizoon2026';
-      errorBox.style.display = 'block';
+      submitBtn.innerHTML = `
+        <span>Sign In to Admin Panel</span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+      `;
     }
   });
 }
 
+// Toggle Password Visibility on Login Screen
+const btnToggleLoginPwd = document.getElementById('btn-toggle-login-pwd');
+if (btnToggleLoginPwd) {
+  btnToggleLoginPwd.addEventListener('click', () => {
+    const pwdInput = document.getElementById('login-password');
+    const eyeOpen = btnToggleLoginPwd.querySelector('.icon-eye-open');
+    const eyeClosed = btnToggleLoginPwd.querySelector('.icon-eye-closed');
+    if (pwdInput.type === 'password') {
+      pwdInput.type = 'text';
+      if (eyeOpen) eyeOpen.style.display = 'none';
+      if (eyeClosed) eyeClosed.style.display = 'block';
+    } else {
+      pwdInput.type = 'password';
+      if (eyeOpen) eyeOpen.style.display = 'block';
+      if (eyeClosed) eyeClosed.style.display = 'none';
+    }
+  });
+}
+
+// Logout Handler
 const logoutBtn = document.getElementById('btn-logout');
 if (logoutBtn) {
-  logoutBtn.addEventListener('click', () => {
+  logoutBtn.addEventListener('click', async () => {
+    if (authToken) {
+      try {
+        await fetch(`${API_BASE}/api/admin/logout`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+      } catch (e) {}
+    }
     authToken = '';
     localStorage.removeItem('hz_admin_token');
     showLoginScreen();
-    showAdminToast('Signed out of admin panel.');
+    showAdminToast('You have been securely logged out.');
+  });
+}
+
+// Credentials Update Form in Settings Tab
+const credentialsForm = document.getElementById('credentials-form');
+if (credentialsForm) {
+  credentialsForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const currentPassword = document.getElementById('change-current-password').value;
+    const newEmail = document.getElementById('change-new-email').value.trim();
+    const newPassword = document.getElementById('change-new-password').value;
+    const confirmPassword = document.getElementById('change-confirm-password').value;
+    const alertBox = document.getElementById('credentials-alert');
+    const saveBtn = document.getElementById('btn-save-credentials');
+
+    alertBox.style.display = 'none';
+    alertBox.className = 'alert-box';
+
+    if (newPassword && newPassword.length < 6) {
+      alertBox.className = 'alert-box alert-error';
+      alertBox.textContent = 'New password must be at least 6 characters long.';
+      alertBox.style.display = 'block';
+      return;
+    }
+
+    if (newPassword && newPassword !== confirmPassword) {
+      alertBox.className = 'alert-box alert-error';
+      alertBox.textContent = 'New password and confirmation do not match.';
+      alertBox.style.display = 'block';
+      return;
+    }
+
+    if (!newEmail && !newPassword) {
+      alertBox.className = 'alert-box alert-error';
+      alertBox.textContent = 'Please enter a new email or new password to update.';
+      alertBox.style.display = 'block';
+      return;
+    }
+
+    saveBtn.disabled = true;
+    saveBtn.innerHTML = '<span>Updating security credentials...</span>';
+
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/change-credentials`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`
+        },
+        body: JSON.stringify({
+          currentPassword,
+          newEmail: newEmail || undefined,
+          newPassword: newPassword || undefined
+        })
+      });
+
+      const data = await res.json();
+
+      if (res.ok && data.success) {
+        alertBox.className = 'alert-box alert-success';
+        alertBox.textContent = data.message || 'Credentials updated successfully!';
+        alertBox.style.display = 'block';
+        if (data.email) {
+          const emailEl = document.getElementById('display-admin-email');
+          if (emailEl) emailEl.textContent = data.email;
+        }
+        credentialsForm.reset();
+        showAdminToast('Security credentials updated successfully!', 'success');
+      } else {
+        alertBox.className = 'alert-box alert-error';
+        alertBox.textContent = data.message || 'Could not update credentials.';
+        alertBox.style.display = 'block';
+      }
+    } catch (err) {
+      alertBox.className = 'alert-box alert-error';
+      alertBox.textContent = 'Network error while updating credentials.';
+      alertBox.style.display = 'block';
+    } finally {
+      saveBtn.disabled = false;
+      saveBtn.innerHTML = `
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+        <span>Save New Credentials</span>
+      `;
+    }
   });
 }
 
@@ -371,7 +493,8 @@ window.switchTab = function (tabId) {
     dashboard: { title: 'Dashboard Overview', sub: 'Welcome back, Editor. Here is your publication heartbeat.' },
     editor: { title: editingPostId ? 'Edit Article & SEO' : 'Write New Article & SEO Studio', sub: 'Compose compelling stories with full search engine optimization and mandatory ALT text.' },
     articles: { title: 'Articles Manager', sub: 'Review, edit, track views, and manage published stories.' },
-    analytics: { title: 'Viewer Analytics & Insights', sub: 'Deep-dive into reader engagement, most read pieces, and organic search impressions.' }
+    analytics: { title: 'Viewer Analytics & Insights', sub: 'Deep-dive into reader engagement, most read pieces, and organic search impressions.' },
+    settings: { title: 'Security & Admin Settings', sub: 'Manage your administrator email, password, and active security protocols.' }
   };
 
   if (titles[tabId]) {

@@ -59,8 +59,7 @@ npm start
 
 - **Public Website**: `http://localhost:3000`
 - **Admin Panel & SEO Studio**: `http://localhost:3000/admin`
-  - **Username**: `admin`
-  - **Password**: `horizoon2026`
+  - **Authentication**: Secured via Supabase Auth & PBKDF2 cryptography. Configure `ADMIN_EMAIL` and `ADMIN_PASSWORD` in your `.env` file or update inside the Admin Panel under **Security & Settings**.
 - **Dynamic Sitemap**: `http://localhost:3000/sitemap.xml`
 
 ### 2. Static File Mode

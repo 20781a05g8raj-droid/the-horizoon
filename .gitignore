@@ -13,7 +13,8 @@ Thumbs.db
 # Logs
 *.log
 
-# Environment Variables
+# Environment Variables & Auth Keys
 .env
 .env.local
 .env.*.local
+data/admin-auth.json

@@ -31,20 +31,29 @@ import {
   saveNewsletterSubscriber,
   saveContactMessage
 } from './data/supabase.js';
+import {
+  authenticateAdmin,
+  validateSession,
+  destroySession,
+  changeCredentials
+} from './data/admin-auth.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Load environment variables from .env file securely on server startup
+if (typeof process.loadEnvFile === 'function') {
+  try {
+    const envPath = path.join(__dirname, '.env');
+    if (fs.existsSync(envPath)) {
+      process.loadEnvFile(envPath);
+    }
+  } catch (e) {}
+}
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 const SITE_URL = process.env.SITE_URL || `http://localhost:${PORT}`;
-
-// Admin Secret Key / Hardcoded default for editor login
-const ADMIN_CREDENTIALS = {
-  username: process.env.ADMIN_USER || 'admin',
-  password: process.env.ADMIN_PASSWORD || 'horizoon2026'
-};
-const ADMIN_TOKEN = 'hz-admin-secret-session-token-2026';
 
 // Middleware
 app.use(cors());
@@ -98,12 +107,25 @@ const upload = multer({
   }
 });
 
-// Auth helper
+// Cryptographic Session Authentication Middleware
 function requireAuth(req, res, next) {
   const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.includes(ADMIN_TOKEN)) {
-    return res.status(401).json({ success: false, message: 'Unauthorized: Admin login required.' });
+  if (!authHeader) {
+    return res.status(401).json({ success: false, message: 'Unauthorized: Admin authentication token required.' });
   }
+
+  // Extract token from Bearer <token>
+  const token = authHeader.replace(/^Bearer\s+/i, '').trim();
+  const session = validateSession(token);
+
+  if (!session) {
+    return res.status(401).json({
+      success: false,
+      message: 'Session expired or invalid. Please sign in to the Admin Panel again.'
+    });
+  }
+
+  req.adminSession = session;
   next();
 }
 
@@ -385,32 +407,12 @@ app.get('/sitemap.xml', async (req, res) => {
 // 3. REST API ENDPOINTS
 // ============================================================================
 
-// Admin Login
-app.post('/api/admin/login', (req, res) => {
-  const { username, password } = req.body;
-  if (username === ADMIN_CREDENTIALS.username && password === ADMIN_CREDENTIALS.password) {
-    return res.json({
-      success: true,
-      token: ADMIN_TOKEN,
-      user: {
-        username: ADMIN_CREDENTIALS.username,
-        role: 'Editor-in-Chief',
-        name: 'Horizoon Admin'
-      }
-    });
-  }
-  return res.status(401).json({ success: false, message: 'Invalid username or password.' });
-});
-
-// Admin Session Verification
-app.get('/api/admin/verify', requireAuth, (req, res) => {
-  res.json({ success: true, user: { username: ADMIN_CREDENTIALS.username, role: 'Editor-in-Chief' } });
-});
-
 // Get all posts (public: published only, admin: can request all)
 app.get('/api/posts', async (req, res) => {
   const { category, search, sort, status } = req.query;
-  const isAuth = (req.headers.authorization || '').includes(ADMIN_TOKEN);
+  const authHeader = req.headers.authorization || '';
+  const token = authHeader.replace(/^Bearer\s+/i, '').trim();
+  const isAuth = !!validateSession(token);
   const filterStatus = isAuth && status ? status : (status || 'published');
 
   const posts = await getAllPostsAsync({
@@ -595,6 +597,71 @@ app.get('/api/stats', requireAuth, async (req, res) => {
     success: true,
     stats
   });
+});
+
+// ============================================================================
+// ADMIN AUTHENTICATION SUITE (Supabase + Cryptographic Engine)
+// ============================================================================
+
+// Admin Login Endpoint (Rate limited, verified against Supabase Auth & PBKDF2 hash)
+app.post('/api/admin/login', async (req, res) => {
+  const { email, password, username } = req.body || {};
+  const targetEmail = (email || username || '').trim();
+  const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '127.0.0.1';
+
+  try {
+    const authResult = await authenticateAdmin({
+      email: targetEmail,
+      password: String(password || ''),
+      ip: String(clientIp)
+    });
+
+    return res.status(authResult.status || 200).json(authResult);
+  } catch (err) {
+    console.error('Admin login error:', err);
+    return res.status(500).json({
+      success: false,
+      message: 'An unexpected authentication error occurred. Please try again.'
+    });
+  }
+});
+
+// Verify active session token on admin panel load
+app.get('/api/admin/verify', requireAuth, (req, res) => {
+  res.json({
+    success: true,
+    email: req.adminSession?.email || 'thehorizoon182@gmail.com',
+    expiresAt: req.adminSession?.expiresAt
+  });
+});
+
+// Admin Logout Endpoint (Invalidates session token on server)
+app.post('/api/admin/logout', (req, res) => {
+  const authHeader = req.headers.authorization;
+  if (authHeader) {
+    const token = authHeader.replace(/^Bearer\s+/i, '').trim();
+    destroySession(token);
+  }
+  res.json({ success: true, message: 'Admin logged out successfully.' });
+});
+
+// Change Admin Credentials (Protected by requireAuth)
+app.post('/api/admin/change-credentials', requireAuth, async (req, res) => {
+  const { currentPassword, newEmail, newPassword } = req.body || {};
+  try {
+    const result = await changeCredentials({
+      currentPassword: String(currentPassword || ''),
+      newEmail: newEmail ? String(newEmail) : undefined,
+      newPassword: newPassword ? String(newPassword) : undefined
+    });
+    return res.status(result.status || 200).json(result);
+  } catch (err) {
+    console.error('Change credentials error:', err);
+    return res.status(500).json({
+      success: false,
+      message: 'Could not update credentials. Please try again.'
+    });
+  }
 });
 
 // Taxonomy Helpers
