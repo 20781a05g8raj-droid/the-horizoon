@@ -16,38 +16,20 @@ export async function initBlogPage() {
   const grid = document.getElementById('blog-posts-grid');
   if (!grid) return;
 
-  let loadedFromApi = false;
-
-  // 1. Try fetching dynamic posts from API
+  // 1. Instant Cache-First Local Store Initialization (0ms wait)
   try {
-    const res = await fetch('/api/posts?status=published');
-    if (res.ok) {
-      const data = await res.json();
-      if (data.success && Array.isArray(data.posts) && data.posts.length > 0) {
-        activeArticles = data.posts;
-        loadedFromApi = true;
-      }
-    }
-  } catch (e) {
-    console.warn('API unavailable, checking local store:', e);
-  }
-
-  // 2. Fallback to localStorage if API was unavailable
-  if (!loadedFromApi) {
-    try {
-      const local = JSON.parse(localStorage.getItem('horizoon_local_posts') || '[]');
-      const published = local.filter(p => p.status === 'published');
-      if (published.length > 0) {
-        published.forEach(p => {
-          if (typeof p.views !== 'number' || isNaN(p.views)) p.views = 0;
-        });
-        activeArticles = published;
-      } else {
-        activeArticles = [...ARTICLES];
-      }
-    } catch (e) {
+    const local = JSON.parse(localStorage.getItem('horizoon_local_posts') || '[]');
+    const published = local.filter(p => p.status === 'published');
+    if (published.length > 0) {
+      published.forEach(p => {
+        if (typeof p.views !== 'number' || isNaN(p.views)) p.views = 0;
+      });
+      activeArticles = published;
+    } else {
       activeArticles = [...ARTICLES];
     }
+  } catch (e) {
+    activeArticles = [...ARTICLES];
   }
 
   // Check URL params for category or search
@@ -65,6 +47,19 @@ export async function initBlogPage() {
   setupSearchAndSort();
   renderBlogPosts();
   renderSidebar();
+
+  // 2. Background Revalidation from API
+  try {
+    const res = await fetch('/api/posts?status=published');
+    if (res.ok) {
+      const data = await res.json();
+      if (data.success && Array.isArray(data.posts) && data.posts.length > 0) {
+        activeArticles = data.posts;
+        renderBlogPosts();
+        renderSidebar();
+      }
+    }
+  } catch (e) {}
 }
 
 function setupCategoryFilters() {

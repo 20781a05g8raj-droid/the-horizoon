@@ -4,6 +4,7 @@ import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 import multer from 'multer';
+import compression from 'compression';
 import {
   getAllPosts,
   getAllPostsAsync,
@@ -55,22 +56,40 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const SITE_URL = process.env.SITE_URL || `http://localhost:${PORT}`;
 
+// Enable Gzip/Brotli HTTP compression for all text/json/html responses
+app.use(compression({
+  threshold: 1024 // compress payloads over 1KB
+}));
+
 // Middleware
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
+// Static asset cache configuration for instant browser repeat loads
+const staticAssetOptions = {
+  maxAge: '7d',
+  etag: true,
+  setHeaders: (res, filePath) => {
+    if (filePath.endsWith('.html')) {
+      res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate');
+    } else {
+      res.setHeader('Cache-Control', 'public, max-age=604800, stale-while-revalidate=86400');
+    }
+  }
+};
+
 // Static asset handlers (supports both root, admin, and /post/:slug relative subpath)
-app.use('/admin', express.static(path.join(__dirname, 'admin')));
+app.use('/admin', express.static(path.join(__dirname, 'admin'), staticAssetOptions));
 app.get(['/admin', '/admin/'], (req, res) => {
   res.sendFile(path.join(__dirname, 'admin', 'index.html'));
 });
-app.use('/css', express.static(path.join(__dirname, 'css')));
-app.use('/assets', express.static(path.join(__dirname, 'assets')));
-app.use('/js', express.static(path.join(__dirname, 'js')));
-app.use('/post/css', express.static(path.join(__dirname, 'css')));
-app.use('/post/assets', express.static(path.join(__dirname, 'assets')));
-app.use('/post/js', express.static(path.join(__dirname, 'js')));
+app.use('/css', express.static(path.join(__dirname, 'css'), staticAssetOptions));
+app.use('/assets', express.static(path.join(__dirname, 'assets'), staticAssetOptions));
+app.use('/js', express.static(path.join(__dirname, 'js'), staticAssetOptions));
+app.use('/post/css', express.static(path.join(__dirname, 'css'), staticAssetOptions));
+app.use('/post/assets', express.static(path.join(__dirname, 'assets'), staticAssetOptions));
+app.use('/post/js', express.static(path.join(__dirname, 'js'), staticAssetOptions));
 
 // Set up Multer for image uploads
 const storage = multer.diskStorage({
@@ -154,6 +173,8 @@ function escapeXml(str) {
 // Injects rich SEO tags, Open Graph, Twitter Cards, Schema.org JSON-LD,
 // and complete article content into the HTML before sending to browser / crawler!
 // ============================================================================
+let cachedPostHtml = null;
+
 async function renderSeoPost(req, res) {
   let slug = req.params?.slug || req.query?.slug;
   if (!slug) {
@@ -169,17 +190,15 @@ async function renderSeoPost(req, res) {
   if (!slug) slug = 'mindfulness-practices-daily-peace';
 
   const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown';
-  let liveViews = 0;
-  try {
-    liveViews = await incrementPostViewsAsync(slug, String(clientIp));
-  } catch (e) {}
+  // Fast in-memory view increment (<1ms)
+  let liveViews = incrementPostViews(slug, String(clientIp));
 
-  let post = await getPostBySlugAsync(slug);
-  if (!post && decodeURIComponent(slug) !== slug) {
-    post = await getPostBySlugAsync(decodeURIComponent(slug));
+  let post = getPostBySlug(slug) || (decodeURIComponent(slug) !== slug ? getPostBySlug(decodeURIComponent(slug)) : null);
+  if (!post) {
+    post = await getPostBySlugAsync(slug);
   }
   if (!post) {
-    const all = await getAllPostsAsync({ status: 'published' });
+    const all = getAllPosts({ status: 'published' });
     post = all.find(p => p.slug === slug || p.slug === decodeURIComponent(slug));
     if (!post && all.length > 0) {
       post = all[0];
@@ -189,19 +208,21 @@ async function renderSeoPost(req, res) {
     post.views = liveViews;
   }
 
-  const candidatePaths = [
-    path.join(__dirname, 'post.html'),
-    path.join(process.cwd(), 'post.html'),
-    path.join(__dirname, '..', 'post.html'),
-    path.resolve('post.html')
-  ];
-  const postHtmlPath = candidatePaths.find(p => fs.existsSync(p));
-
-  if (!postHtmlPath) {
-    return res.status(404).send('Template post.html not found');
+  if (!cachedPostHtml) {
+    const candidatePaths = [
+      path.join(__dirname, 'post.html'),
+      path.join(process.cwd(), 'post.html'),
+      path.join(__dirname, '..', 'post.html'),
+      path.resolve('post.html')
+    ];
+    const postHtmlPath = candidatePaths.find(p => fs.existsSync(p));
+    if (!postHtmlPath) {
+      return res.status(404).send('Template post.html not found');
+    }
+    cachedPostHtml = fs.readFileSync(postHtmlPath, 'utf-8');
   }
 
-  let html = fs.readFileSync(postHtmlPath, 'utf-8');
+  let html = cachedPostHtml;
 
   if (post) {
     const postUrl = `${SITE_URL}/post/${post.slug}`;
@@ -303,6 +324,7 @@ async function renderSeoPost(req, res) {
   }
 
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.setHeader('Cache-Control', 'public, max-age=30, stale-while-revalidate=120');
   res.send(html);
 }
 
@@ -422,6 +444,7 @@ app.get('/api/posts', async (req, res) => {
     status: filterStatus === 'all' ? undefined : filterStatus
   });
 
+  res.setHeader('Cache-Control', isAuth ? 'private, no-cache' : 'public, max-age=15, stale-while-revalidate=60');
   res.json({
     success: true,
     count: posts.length,
@@ -435,6 +458,7 @@ app.get('/api/posts/:slug', async (req, res) => {
   if (!post) {
     return res.status(404).json({ success: false, message: 'Post not found.' });
   }
+  res.setHeader('Cache-Control', 'public, max-age=30, stale-while-revalidate=120');
   res.json({ success: true, post });
 });
 
@@ -593,6 +617,7 @@ app.post('/api/upload', requireAuth, upload.single('image'), (req, res) => {
 // Admin Dashboard Analytics
 app.get('/api/stats', requireAuth, async (req, res) => {
   const stats = await getStatsAsync();
+  res.setHeader('Cache-Control', 'private, max-age=5, stale-while-revalidate=30');
   res.json({
     success: true,
     stats
@@ -676,6 +701,7 @@ app.get('/api/authors', (req, res) => {
 // Supabase Status & Sync Endpoint
 app.get('/api/supabase/status', async (req, res) => {
   const isConnected = await checkSupabaseStatus();
+  res.setHeader('Cache-Control', 'private, max-age=30');
   res.json({
     success: true,
     connected: isConnected,
@@ -695,6 +721,7 @@ app.post('/api/supabase/sync', requireAuth, async (req, res) => {
 // Comments API (Stores in Supabase)
 app.get('/api/comments/:slug', async (req, res) => {
   const comments = await getCommentsFromSupabase(req.params.slug);
+  res.setHeader('Cache-Control', 'public, max-age=15, stale-while-revalidate=60');
   res.json({ success: true, comments: comments || [] });
 });
 
@@ -733,7 +760,7 @@ syncWithSupabase().catch(() => {});
 // ============================================================================
 // 4. SERVE STATIC ASSETS & HTML PAGES
 // ============================================================================
-app.use(express.static(__dirname));
+app.use(express.static(__dirname, staticAssetOptions));
 
 // Fallback to static files or index.html
 app.get('*', (req, res) => {

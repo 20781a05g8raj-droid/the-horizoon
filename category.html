@@ -9,6 +9,11 @@
 
   <link rel="icon" type="image/png" href="assets/images/logo.png">
 
+  <!-- Fonts Preconnect & Optimized Loading -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=Playfair+Display:ital,wght@0,500;0,600;0,700;0,800;1,400;1,600&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&display=swap">
+
   <!-- Stylesheets -->
   <link rel="stylesheet" href="css/variables.css">
   <link rel="stylesheet" href="css/base.css">
@@ -324,74 +329,76 @@
         `).join('');
       }
 
-      // Load dynamic published posts
+      // 1. Instant Cache-First Render (0ms perceived wait)
       let allPublished = [];
       try {
-        const res = await fetch('/api/posts?status=published');
-        if (res.ok) {
-          const data = await res.json();
-          if (data.success && Array.isArray(data.posts) && data.posts.length > 0) {
-            allPublished = data.posts;
-          }
-        }
+        const local = JSON.parse(localStorage.getItem('horizoon_local_posts') || '[]');
+        const published = local.filter(p => p.status === 'published');
+        if (published.length > 0) allPublished = published;
       } catch (e) {}
-
-      if (allPublished.length === 0) {
-        try {
-          const local = JSON.parse(localStorage.getItem('horizoon_local_posts') || '[]');
-          const published = local.filter(p => p.status === 'published');
-          if (published.length > 0) allPublished = published;
-        } catch (e) {}
-      }
 
       if (allPublished.length === 0) {
         allPublished = [...ARTICLES];
       }
 
-      // Filter Articles matching category
-      let matching = allPublished.filter(a =>
-        (a.categorySlug || '').toLowerCase() === currentCat.slug.toLowerCase() ||
-        (a.category || '').toLowerCase() === currentCat.name.toLowerCase()
-      );
+      function renderCategoryStories(posts) {
+        let matching = posts.filter(a =>
+          (a.categorySlug || '').toLowerCase() === currentCat.slug.toLowerCase() ||
+          (a.category || '').toLowerCase() === currentCat.name.toLowerCase()
+        );
 
-      // Update count
-      const statsEl = document.getElementById('cat-stats');
-      if (statsEl) {
-        statsEl.textContent = `${matching.length} Curated ${matching.length === 1 ? 'Story' : 'Stories'} in ${currentCat.name}`;
+        const statsEl = document.getElementById('cat-stats');
+        if (statsEl) {
+          statsEl.textContent = `${matching.length} Curated ${matching.length === 1 ? 'Story' : 'Stories'} in ${currentCat.name}`;
+        }
+
+        if (matching.length === 0) {
+          matching = posts.slice(0, 4);
+        }
+
+        const grid = document.getElementById('cat-posts-grid');
+        if (grid) {
+          grid.innerHTML = matching.map(post => `
+            <article class="latest-card">
+              <div class="latest-thumb-wrap">
+                <a href="post.html?slug=${post.slug}">
+                  <img src="${post.image}" alt="${post.imageAlt || post.title}" loading="lazy" onerror="this.src='assets/images/featured-mindfulness.jpg'">
+                </a>
+              </div>
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.35rem;">
+                <span class="latest-category">${post.category}</span>
+                <button class="save-btn" data-save-slug="${post.slug}" title="Save article" aria-label="Save article">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+                  </svg>
+                </button>
+              </div>
+              <h3 class="latest-title">
+                <a href="post.html?slug=${post.slug}">${post.title}</a>
+              </h3>
+              <p style="font-size: 0.88rem; color: var(--color-text-muted); line-height: 1.5; margin-bottom: 0.85rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                ${post.summary}
+              </p>
+              <div class="latest-date">${post.date || 'Recent'} • ${post.readTime || '8 min read'}</div>
+            </article>
+          `).join('');
+        }
       }
 
-      // Fallback: If no exact matches in sample set, show other related stories
-      if (matching.length === 0) {
-        matching = allPublished.slice(0, 4);
-      }
+      // Initial instant render
+      renderCategoryStories(allPublished);
 
-      const grid = document.getElementById('cat-posts-grid');
-      if (grid) {
-        grid.innerHTML = matching.map(post => `
-          <article class="latest-card">
-            <div class="latest-thumb-wrap">
-              <a href="post.html?slug=${post.slug}">
-                <img src="${post.image}" alt="${post.imageAlt || post.title}" loading="lazy" onerror="this.src='assets/images/featured-mindfulness.jpg'">
-              </a>
-            </div>
-            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.35rem;">
-              <span class="latest-category">${post.category}</span>
-              <button class="save-btn" data-save-slug="${post.slug}" title="Save article" aria-label="Save article">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
-                </svg>
-              </button>
-            </div>
-            <h3 class="latest-title">
-              <a href="post.html?slug=${post.slug}">${post.title}</a>
-            </h3>
-            <p style="font-size: 0.88rem; color: var(--color-text-muted); line-height: 1.5; margin-bottom: 0.85rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
-              ${post.summary}
-            </p>
-            <div class="latest-date">${post.date || 'Recent'} • ${post.readTime || '8 min read'}</div>
-          </article>
-        `).join('');
-      }
+      // 2. Background Revalidation from API
+      try {
+        fetch('/api/posts?status=published')
+          .then(res => res.ok ? res.json() : null)
+          .then(data => {
+            if (data && data.success && Array.isArray(data.posts) && data.posts.length > 0) {
+              renderCategoryStories(data.posts);
+            }
+          })
+          .catch(() => {});
+      } catch (e) {}
     });
   </script>
 </body>

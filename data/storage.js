@@ -277,48 +277,58 @@ function writeDb(data) {
   }
 }
 
-export async function getAllPostsAsync({ category, search, sort = 'newest', status } = {}) {
-  let posts = null;
-  try {
-    const remote = await getPostsFromSupabase();
-    if (remote && Array.isArray(remote) && remote.length > 0) {
-      posts = [...remote];
+// In-Memory Supabase Cache with TTL (Stale-While-Revalidate)
+let lastSupabaseFetchTime = 0;
+let pendingSupabaseFetch = null;
+const SUPABASE_CACHE_TTL = 60 * 1000; // 60 seconds
+
+/**
+ * Asynchronously refreshes posts from Supabase in the background
+ */
+export async function refreshFromSupabaseAsync(force = false) {
+  const now = Date.now();
+  if (!force && (now - lastSupabaseFetchTime < SUPABASE_CACHE_TTL)) {
+    return;
+  }
+  if (pendingSupabaseFetch) {
+    return pendingSupabaseFetch;
+  }
+
+  pendingSupabaseFetch = (async () => {
+    try {
+      const remote = await getPostsFromSupabase();
+      if (remote && Array.isArray(remote) && remote.length > 0) {
+        const db = readDb();
+        const map = new Map();
+        // Keep local edits & views, overlay remote
+        db.posts.forEach(p => map.set(p.slug || p.id, p));
+        remote.forEach(p => {
+          const key = p.slug || p.id;
+          const existing = map.get(key);
+          map.set(key, { ...p, views: Math.max(Number(p.views) || 0, Number(existing?.views) || 0) });
+        });
+        db.posts = Array.from(map.values());
+        writeDb(db);
+        lastSupabaseFetchTime = Date.now();
+      }
+    } catch (err) {
+      console.warn('Background Supabase refresh skipped:', err.message);
+    } finally {
+      pendingSupabaseFetch = null;
     }
-  } catch (e) {}
+  })();
 
-  if (!posts) {
-    posts = getAllPosts({ category, search, sort, status });
-    return posts;
+  return pendingSupabaseFetch;
+}
+
+export async function getAllPostsAsync({ category, search, sort = 'newest', status } = {}) {
+  // Trigger non-blocking background refresh if cache expired
+  if (Date.now() - lastSupabaseFetchTime > SUPABASE_CACHE_TTL) {
+    refreshFromSupabaseAsync().catch(() => {});
   }
 
-  if (status) {
-    posts = posts.filter(p => p.status === status);
-  }
-
-  if (category && category !== 'all') {
-    posts = posts.filter(p => (p.categorySlug || '').toLowerCase() === category.toLowerCase() || (p.category || '').toLowerCase() === category.toLowerCase());
-  }
-
-  if (search) {
-    const q = search.toLowerCase();
-    posts = posts.filter(p =>
-      (p.title || '').toLowerCase().includes(q) ||
-      (p.summary || '').toLowerCase().includes(q) ||
-      (p.tags || []).some(t => t.toLowerCase().includes(q))
-    );
-  }
-
-  if (sort === 'newest') {
-    posts.sort((a, b) => new Date(b.createdAt || b.isoDate || b.date) - new Date(a.createdAt || a.isoDate || a.date));
-  } else if (sort === 'oldest') {
-    posts.sort((a, b) => new Date(a.createdAt || a.isoDate || a.date) - new Date(b.createdAt || b.isoDate || b.date));
-  } else if (sort === 'views') {
-    posts.sort((a, b) => (Number(b.views) || 0) - (Number(a.views) || 0));
-  } else if (sort === 'title') {
-    posts.sort((a, b) => (a.title || '').localeCompare(b.title || ''));
-  }
-
-  return posts;
+  // Instant in-memory read (<1ms)
+  return getAllPosts({ category, search, sort, status });
 }
 
 export function getAllPosts({ category, search, sort = 'newest', status } = {}) {
@@ -356,19 +366,20 @@ export function getAllPosts({ category, search, sort = 'newest', status } = {}) 
 }
 
 export async function getPostBySlugAsync(slug) {
-  try {
-    const remote = await getPostsFromSupabase();
-    if (remote && Array.isArray(remote)) {
-      const found = remote.find(p => p.slug === slug);
-      if (found) return found;
-    }
-  } catch (e) {}
-  return getPostBySlug(slug);
+  const post = getPostBySlug(slug);
+  if (post) return post;
+
+  // If not found in memory, try quick background refresh
+  if (Date.now() - lastSupabaseFetchTime > SUPABASE_CACHE_TTL) {
+    await refreshFromSupabaseAsync(true);
+    return getPostBySlug(slug);
+  }
+  return null;
 }
 
 export function getPostBySlug(slug) {
   const db = readDb();
-  return db.posts.find(p => p.slug === slug);
+  return db.posts.find(p => p.slug === slug || decodeURIComponent(p.slug) === slug);
 }
 
 export function getPostById(id) {
@@ -410,20 +421,20 @@ export async function createPostAsync(postData) {
     updatedAt: new Date().toISOString()
   };
 
-  // 1. Await Supabase insertion
-  try {
-    const saved = await upsertPostInSupabase(newPost);
-    if (saved) {
-      console.log('⚡ Successfully saved article in Supabase:', newPost.slug);
-    }
-  } catch (err) {
-    console.warn('Supabase post create warning:', err.message);
-  }
-
-  // 2. Also keep local memory copy updated
+  // 1. Immediately update local memory copy & disk for instant response
   const db = readDb();
   db.posts.unshift(newPost);
   writeDb(db);
+  lastSupabaseFetchTime = Date.now();
+
+  // 2. Asynchronously sync to Supabase in background
+  upsertPostInSupabase(newPost)
+    .then(saved => {
+      if (saved) console.log('⚡ Background synced new article to Supabase:', newPost.slug);
+    })
+    .catch(err => {
+      console.warn('Supabase post create warning:', err.message);
+    });
 
   return newPost;
 }
@@ -502,19 +513,19 @@ export async function updatePostAsync(id, updateData) {
     updatedAt: new Date().toISOString()
   };
 
-  // 1. Await Supabase update
-  try {
-    await upsertPostInSupabase(updated);
-    console.log('⚡ Successfully updated article in Supabase:', updated.slug);
-  } catch (err) {
-    console.warn('Supabase post update warning:', err.message);
-  }
-
-  // 2. Local db
+  // 1. Immediately update in-memory DB and write to disk
   if (index !== -1) {
     db.posts[index] = updated;
-    writeDb(db);
+  } else {
+    db.posts.push(updated);
   }
+  writeDb(db);
+  lastSupabaseFetchTime = Date.now();
+
+  // 2. Asynchronously sync to Supabase in background
+  upsertPostInSupabase(updated)
+    .then(() => console.log('⚡ Background synced updated article to Supabase:', updated.slug))
+    .catch(err => console.warn('Supabase post update warning:', err.message));
 
   return updated;
 }
@@ -552,13 +563,12 @@ export function updatePost(id, updateData) {
 }
 
 export async function deletePostAsync(id) {
-  try {
-    await deletePostFromSupabase(id);
-    console.log('⚡ Successfully deleted article from Supabase:', id);
-  } catch (err) {
-    console.warn('Supabase post delete warning:', err.message);
-  }
-  return deletePost(id);
+  const result = deletePost(id);
+  // Asynchronously delete from Supabase in background
+  deletePostFromSupabase(id)
+    .then(() => console.log('⚡ Background deleted article from Supabase:', id))
+    .catch(err => console.warn('Supabase post delete warning:', err.message));
+  return result;
 }
 
 export function deletePost(id) {
@@ -567,6 +577,7 @@ export function deletePost(id) {
   db.posts = db.posts.filter(p => p.id !== id && p.slug !== id);
   if (db.posts.length !== initialLength) {
     writeDb(db);
+    lastSupabaseFetchTime = Date.now();
     deletePostFromSupabase(id).catch(() => {});
     return true;
   }
@@ -574,38 +585,12 @@ export function deletePost(id) {
 }
 
 export async function incrementPostViewsAsync(slug, clientIp = 'unknown') {
-  const cacheKey = `${slug}_${clientIp}`;
-  const now = Date.now();
-  const TEN_MINUTES = 10 * 60 * 1000;
-
-  // Simple IP debounce: 1 view per IP per post per 10 minutes
-  if (recentViews.has(cacheKey)) {
-    const lastTime = recentViews.get(cacheKey);
-    if (now - lastTime < TEN_MINUTES) {
-      const p = await getPostBySlugAsync(slug);
-      return p ? (Number(p.views) || 0) : 0;
-    }
-  }
-
-  recentViews.set(cacheKey, now);
-
-  // Directly increment in Supabase for live real-time audience counter
-  try {
-    const liveViews = await recordPostViewInSupabase(slug);
-    if (liveViews !== null) {
-      const db = readDb();
-      const localPost = db.posts.find(p => p.slug === slug);
-      if (localPost) {
-        localPost.views = liveViews;
-        writeDb(db);
-      }
-      return liveViews;
-    }
-  } catch (err) {
-    console.warn('Supabase live view record failed, falling back to local:', err.message);
-  }
-
-  return incrementPostViews(slug, clientIp);
+  // Use instant in-memory increment (<1ms)
+  const views = incrementPostViews(slug, clientIp);
+  
+  // Background fire-and-forget sync to Supabase without blocking the response
+  recordPostViewInSupabase(slug).catch(() => {});
+  return views;
 }
 
 export function incrementPostViews(slug, clientIp = 'unknown') {
@@ -636,41 +621,10 @@ export function incrementPostViews(slug, clientIp = 'unknown') {
 }
 
 export async function getStatsAsync() {
-  let posts = null;
-  try {
-    const remote = await getPostsFromSupabase();
-    if (remote && Array.isArray(remote) && remote.length > 0) {
-      posts = remote;
-    }
-  } catch (e) {}
-
-  if (!posts) {
-    return getStats();
+  if (Date.now() - lastSupabaseFetchTime > SUPABASE_CACHE_TTL) {
+    refreshFromSupabaseAsync().catch(() => {});
   }
-
-  const totalPosts = posts.length;
-  const totalPublished = posts.filter(p => p.status === 'published').length;
-  const totalViews = posts.reduce((acc, p) => acc + (Number(p.views) || 0), 0);
-  
-  const topPosts = [...posts]
-    .filter(p => p.status === 'published')
-    .sort((a, b) => (Number(b.views) || 0) - (Number(a.views) || 0))
-    .slice(0, 5)
-    .map(p => ({
-      id: p.id,
-      slug: p.slug,
-      title: p.title,
-      category: p.category,
-      views: Number(p.views) || 0,
-      image: p.image
-    }));
-
-  return {
-    totalPosts,
-    totalPublished,
-    totalViews,
-    topPosts
-  };
+  return getStats();
 }
 
 export function getStats() {

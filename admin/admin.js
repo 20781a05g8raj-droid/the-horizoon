@@ -522,52 +522,34 @@ if (topbarWriteBtn) {
 }
 
 // ==========================================================================
-// 4. Dashboard & Analytics Loading
+// 4. Dashboard & Analytics Loading (Instant Cache-First)
 // ==========================================================================
-async function loadDashboardData() {
-  let stats = null;
-  try {
-    const res = await fetch(`${API_BASE}/api/stats`, {
-      headers: { 'Authorization': `Bearer ${authToken}` }
-    });
-    if (res.ok) {
-      const data = await res.json();
-      if (data.success) stats = data.stats;
-    }
-  } catch (e) {
-    console.warn('Dashboard stats fallback to local storage:', e);
-  }
+function renderDashboardStats(stats) {
+  if (!stats) return;
 
-  if (!stats) {
-    const posts = getLocalStoredPosts();
-    const published = posts.filter(p => p.status === 'published');
-    const totalViews = posts.reduce((sum, p) => sum + (p.views || 0), 0);
-    const sorted = [...published].sort((a, b) => (b.views || 0) - (a.views || 0));
-    stats = {
-      totalViews,
-      totalPublished: published.length,
-      totalDrafts: posts.length - published.length,
-      topPosts: sorted.slice(0, 5)
-    };
-  }
+  const totalViewsEl = document.getElementById('stat-total-views');
+  const totalPostsEl = document.getElementById('stat-total-posts');
+  const avgViewsEl = document.getElementById('stat-avg-views');
+  const topTitleEl = document.getElementById('stat-top-title');
+  const topViewsEl = document.getElementById('stat-top-views');
 
-  document.getElementById('stat-total-views').textContent = (stats.totalViews || 0).toLocaleString();
-  document.getElementById('stat-total-posts').textContent = (stats.totalPublished || 0).toLocaleString();
+  if (totalViewsEl) totalViewsEl.textContent = (stats.totalViews || 0).toLocaleString();
+  if (totalPostsEl) totalPostsEl.textContent = (stats.totalPublished || 0).toLocaleString();
 
   const avg = stats.totalPublished > 0 ? Math.round(stats.totalViews / stats.totalPublished) : 0;
-  document.getElementById('stat-avg-views').textContent = avg.toLocaleString();
+  if (avgViewsEl) avgViewsEl.textContent = avg.toLocaleString();
 
   if (stats.topPosts && stats.topPosts.length > 0 && (stats.totalViews || 0) > 0) {
     const top = stats.topPosts[0];
-    document.getElementById('stat-top-title').textContent = top.title;
-    document.getElementById('stat-top-views').textContent = `${(top.views || 0).toLocaleString()} organic views`;
+    if (topTitleEl) topTitleEl.textContent = top.title;
+    if (topViewsEl) topViewsEl.textContent = `${(top.views || 0).toLocaleString()} organic views`;
   } else if (stats.topPosts && stats.topPosts.length > 0) {
     const top = stats.topPosts[0];
-    document.getElementById('stat-top-title').textContent = top.title;
-    document.getElementById('stat-top-views').textContent = '0 organic views';
+    if (topTitleEl) topTitleEl.textContent = top.title;
+    if (topViewsEl) topViewsEl.textContent = '0 organic views';
   } else {
-    document.getElementById('stat-top-title').textContent = 'No traffic yet';
-    document.getElementById('stat-top-views').textContent = '0 organic views';
+    if (topTitleEl) topTitleEl.textContent = 'No traffic yet';
+    if (topViewsEl) topViewsEl.textContent = '0 organic views';
   }
 
   // Render top posts table
@@ -597,24 +579,37 @@ async function loadDashboardData() {
   }
 }
 
-async function loadAnalyticsData() {
-  let posts = null;
+async function loadDashboardData() {
+  // 1. Instant Render from local cache (0ms delay)
+  const posts = getLocalStoredPosts();
+  const published = posts.filter(p => p.status === 'published');
+  const totalViews = posts.reduce((sum, p) => sum + (p.views || 0), 0);
+  const sorted = [...published].sort((a, b) => (b.views || 0) - (a.views || 0));
+  const localStats = {
+    totalViews,
+    totalPublished: published.length,
+    totalDrafts: posts.length - published.length,
+    topPosts: sorted.slice(0, 5)
+  };
+  renderDashboardStats(localStats);
+
+  // 2. Background Revalidation from API
   try {
-    const res = await fetch(`${API_BASE}/api/posts?status=all&sort=views`, {
+    const res = await fetch(`${API_BASE}/api/stats`, {
       headers: { 'Authorization': `Bearer ${authToken}` }
     });
     if (res.ok) {
       const data = await res.json();
-      if (data.success && data.posts) posts = data.posts;
+      if (data.success && data.stats) {
+        renderDashboardStats(data.stats);
+      }
     }
   } catch (e) {
-    console.warn('Analytics fallback to local store:', e);
+    console.warn('Dashboard stats fallback to local storage:', e);
   }
+}
 
-  if (!posts) {
-    posts = [...getLocalStoredPosts()].sort((a, b) => (Number(b.views) || 0) - (Number(a.views) || 0));
-  }
-
+function renderAnalyticsTable(posts) {
   const maxViews = posts.length > 0 ? Math.max(...posts.map(p => Number(p.views) || 0), 0) : 0;
   const tbody = document.getElementById('analytics-tbody');
 
@@ -643,10 +638,36 @@ async function loadAnalyticsData() {
   }
 }
 
+async function loadAnalyticsData() {
+  // 1. Instant Cache-First Local Render
+  const localSorted = [...getLocalStoredPosts()].sort((a, b) => (Number(b.views) || 0) - (Number(a.views) || 0));
+  renderAnalyticsTable(localSorted);
+
+  // 2. Background Revalidation from API
+  try {
+    const res = await fetch(`${API_BASE}/api/posts?status=all&sort=views`, {
+      headers: { 'Authorization': `Bearer ${authToken}` }
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data.success && data.posts) {
+        renderAnalyticsTable(data.posts);
+      }
+    }
+  } catch (e) {
+    console.warn('Analytics fallback to local store:', e);
+  }
+}
+
 // ==========================================================================
-// 5. Articles Management (List, Filter, Delete)
+// 5. Articles Management (List, Filter, Delete) - Instant Cache-First
 // ==========================================================================
 async function loadAllArticles() {
+  // 1. Instant Cache-First Render (0ms delay)
+  currentPosts = getLocalStoredPosts();
+  renderArticlesTable(currentPosts);
+
+  // 2. Background Revalidation from API
   try {
     const res = await fetch(`${API_BASE}/api/posts?status=all&sort=newest`, {
       headers: { 'Authorization': `Bearer ${authToken}` }
@@ -657,15 +678,11 @@ async function loadAllArticles() {
         currentPosts = data.posts;
         saveLocalStoredPosts(currentPosts);
         renderArticlesTable(currentPosts);
-        return;
       }
     }
   } catch (e) {
     console.warn('Articles list fallback to local store:', e);
   }
-
-  currentPosts = getLocalStoredPosts();
-  renderArticlesTable(currentPosts);
 }
 
 function renderArticlesTable(posts) {

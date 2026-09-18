@@ -8,6 +8,22 @@ import { ARTICLES, CATEGORIES, SITE_CONFIG } from './data.js';
 let allSearchableArticles = [...ARTICLES];
 
 export async function loadPublishedArticles() {
+  // 1. Instant Cache-First Render (0ms perceived load time)
+  try {
+    const local = JSON.parse(localStorage.getItem('horizoon_local_posts') || '[]');
+    const published = local.filter(p => p.status === 'published');
+    if (published.length > 0) {
+      allSearchableArticles = published;
+      renderHomepageLatestArticles(published);
+      updateSavedUI();
+    } else {
+      renderHomepageLatestArticles(ARTICLES);
+    }
+  } catch (e) {
+    renderHomepageLatestArticles(ARTICLES);
+  }
+
+  // 2. Silent Asynchronous Revalidation in background
   try {
     const res = await fetch('/api/posts?status=published');
     if (res.ok) {
@@ -21,19 +37,7 @@ export async function loadPublishedArticles() {
     }
   } catch (e) {}
 
-  try {
-    const local = JSON.parse(localStorage.getItem('horizoon_local_posts') || '[]');
-    const published = local.filter(p => p.status === 'published');
-    if (published.length > 0) {
-      allSearchableArticles = published;
-      renderHomepageLatestArticles(published);
-      updateSavedUI();
-      return published;
-    }
-  } catch (e) {}
-
-  renderHomepageLatestArticles(ARTICLES);
-  return ARTICLES;
+  return allSearchableArticles;
 }
 
 function renderHomepageLatestArticles(posts) {

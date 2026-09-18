@@ -10,6 +10,8 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
 });
 
 let isSupabaseAvailable = null;
+let lastStatusCheck = 0;
+const STATUS_CACHE_TTL = 60 * 1000; // 60 seconds
 
 function normalizePostFromDb(row) {
   if (!row) return null;
@@ -39,11 +41,17 @@ function normalizePostFromDb(row) {
 }
 
 /**
- * Checks if Supabase table 'posts' is ready
+ * Checks if Supabase table 'posts' is ready (cached with 60s TTL)
  */
-export async function checkSupabaseStatus() {
+export async function checkSupabaseStatus(force = false) {
+  const now = Date.now();
+  if (!force && isSupabaseAvailable !== null && (now - lastStatusCheck < STATUS_CACHE_TTL)) {
+    return isSupabaseAvailable;
+  }
+
   try {
     const { data, error } = await supabase.from('posts').select('id').limit(1);
+    lastStatusCheck = now;
     if (error) {
       isSupabaseAvailable = false;
       return false;
@@ -51,6 +59,7 @@ export async function checkSupabaseStatus() {
     isSupabaseAvailable = true;
     return true;
   } catch (err) {
+    lastStatusCheck = now;
     isSupabaseAvailable = false;
     return false;
   }
