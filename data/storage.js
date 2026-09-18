@@ -251,10 +251,20 @@ function readDb() {
     const targetFile = fs.existsSync(activePath) ? activePath : DB_PATH;
     const raw = fs.readFileSync(targetFile, 'utf-8');
     inMemoryDb = JSON.parse(raw);
+    if (!Array.isArray(inMemoryDb.deletedPosts)) {
+      inMemoryDb.deletedPosts = [];
+    }
+    // Filter out any tombstone-deleted posts
+    if (inMemoryDb.deletedPosts.length > 0 && Array.isArray(inMemoryDb.posts)) {
+      const deletedSet = new Set(inMemoryDb.deletedPosts.map(x => String(x).toLowerCase()));
+      inMemoryDb.posts = inMemoryDb.posts.filter(p =>
+        !deletedSet.has(String(p.id).toLowerCase()) && !deletedSet.has(String(p.slug).toLowerCase())
+      );
+    }
     return inMemoryDb;
   } catch (err) {
     console.error('Error reading db.json, returning empty store:', err);
-    return { posts: [], categories: [], authors: [] };
+    return { posts: [], categories: [], authors: [], deletedPosts: [] };
   }
 }
 
@@ -299,14 +309,33 @@ export async function refreshFromSupabaseAsync(force = false) {
       const remote = await getPostsFromSupabase();
       if (remote && Array.isArray(remote) && remote.length > 0) {
         const db = readDb();
+        if (!Array.isArray(db.deletedPosts)) db.deletedPosts = [];
+        const deletedSet = new Set(db.deletedPosts.map(x => String(x).toLowerCase()));
+
+        // Filter out any tombstones from remote
+        const validRemote = remote.filter(p =>
+          !deletedSet.has(String(p.id).toLowerCase()) && !deletedSet.has(String(p.slug).toLowerCase())
+        );
+
         const map = new Map();
-        // Keep local edits & views, overlay remote
-        db.posts.forEach(p => map.set(p.slug || p.id, p));
-        remote.forEach(p => {
+        // Supabase is authoritative
+        validRemote.forEach(p => {
           const key = p.slug || p.id;
-          const existing = map.get(key);
-          map.set(key, { ...p, views: Math.max(Number(p.views) || 0, Number(existing?.views) || 0) });
+          map.set(key, p);
         });
+
+        // Retain un-synced recent local posts (created in last 5 minutes)
+        db.posts.forEach(p => {
+          const key = p.slug || p.id;
+          const isDeleted = deletedSet.has(String(p.id).toLowerCase()) || deletedSet.has(String(p.slug).toLowerCase());
+          if (!isDeleted && !map.has(key)) {
+            const age = Date.now() - new Date(p.createdAt || p.isoDate || 0).getTime();
+            if (age < 5 * 60 * 1000) {
+              map.set(key, p);
+            }
+          }
+        });
+
         db.posts = Array.from(map.values());
         writeDb(db);
         lastSupabaseFetchTime = Date.now();
@@ -423,13 +452,25 @@ export async function createPostAsync(postData) {
 
   // 1. Immediately update local memory copy & disk for instant response
   const db = readDb();
+  if (!Array.isArray(db.deletedPosts)) db.deletedPosts = [];
+  // Ensure new post is removed from tombstones if re-created
+  db.deletedPosts = db.deletedPosts.filter(x =>
+    String(x).toLowerCase() !== String(newPost.id).toLowerCase() &&
+    String(x).toLowerCase() !== String(newPost.slug).toLowerCase()
+  );
   db.posts.unshift(newPost);
   writeDb(db);
   lastSupabaseFetchTime = Date.now();
 
   // 2. Asynchronously sync to Supabase in background
   upsertPostInSupabase(newPost)
-    .then(saved => {
+    .then(async saved => {
+      const currentDb = readDb();
+      const deletedSet = new Set((currentDb.deletedPosts || []).map(x => String(x).toLowerCase()));
+      if (deletedSet.has(String(newPost.id).toLowerCase()) || deletedSet.has(String(newPost.slug).toLowerCase())) {
+        await deletePostFromSupabase(newPost.id, newPost.slug);
+        return;
+      }
       if (saved) console.log('⚡ Background synced new article to Supabase:', newPost.slug);
     })
     .catch(err => {
@@ -524,7 +565,15 @@ export async function updatePostAsync(id, updateData) {
 
   // 2. Asynchronously sync to Supabase in background
   upsertPostInSupabase(updated)
-    .then(() => console.log('⚡ Background synced updated article to Supabase:', updated.slug))
+    .then(async () => {
+      const currentDb = readDb();
+      const deletedSet = new Set((currentDb.deletedPosts || []).map(x => String(x).toLowerCase()));
+      if (deletedSet.has(String(updated.id).toLowerCase()) || deletedSet.has(String(updated.slug).toLowerCase())) {
+        await deletePostFromSupabase(updated.id, updated.slug);
+        return;
+      }
+      console.log('⚡ Background synced updated article to Supabase:', updated.slug);
+    })
     .catch(err => console.warn('Supabase post update warning:', err.message));
 
   return updated;
@@ -563,25 +612,63 @@ export function updatePost(id, updateData) {
 }
 
 export async function deletePostAsync(id) {
-  const result = deletePost(id);
-  // Asynchronously delete from Supabase in background
-  deletePostFromSupabase(id)
-    .then(() => console.log('⚡ Background deleted article from Supabase:', id))
-    .catch(err => console.warn('Supabase post delete warning:', err.message));
-  return result;
+  const db = readDb();
+  if (!Array.isArray(db.deletedPosts)) db.deletedPosts = [];
+
+  const target = db.posts.find(p => p.id === id || p.slug === id);
+  const targetId = target?.id || id;
+  const targetSlug = target?.slug || (typeof id === 'string' && !id.startsWith('post-') ? id : null);
+
+  // Add both ID and slug to tombstones so it can never be revived
+  if (targetId && !db.deletedPosts.includes(targetId)) db.deletedPosts.push(targetId);
+  if (targetSlug && !db.deletedPosts.includes(targetSlug)) db.deletedPosts.push(targetSlug);
+  if (id && !db.deletedPosts.includes(id)) db.deletedPosts.push(id);
+
+  // Remove from local memory and db
+  db.posts = db.posts.filter(p =>
+    p.id !== targetId &&
+    p.slug !== targetSlug &&
+    p.id !== id &&
+    p.slug !== id
+  );
+  writeDb(db);
+  lastSupabaseFetchTime = Date.now();
+
+  // Await Supabase deletion to guarantee it is removed before HTTP response finishes
+  try {
+    await deletePostFromSupabase(targetId, targetSlug);
+    console.log('⚡ Deleted post from Supabase:', targetId, targetSlug);
+  } catch (err) {
+    console.warn('Supabase post delete warning:', err.message);
+  }
+
+  return true;
 }
 
 export function deletePost(id) {
   const db = readDb();
+  if (!Array.isArray(db.deletedPosts)) db.deletedPosts = [];
+
+  const target = db.posts.find(p => p.id === id || p.slug === id);
+  const targetId = target?.id || id;
+  const targetSlug = target?.slug || (typeof id === 'string' && !id.startsWith('post-') ? id : null);
+
+  if (targetId && !db.deletedPosts.includes(targetId)) db.deletedPosts.push(targetId);
+  if (targetSlug && !db.deletedPosts.includes(targetSlug)) db.deletedPosts.push(targetSlug);
+  if (id && !db.deletedPosts.includes(id)) db.deletedPosts.push(id);
+
   const initialLength = db.posts.length;
-  db.posts = db.posts.filter(p => p.id !== id && p.slug !== id);
-  if (db.posts.length !== initialLength) {
-    writeDb(db);
-    lastSupabaseFetchTime = Date.now();
-    deletePostFromSupabase(id).catch(() => {});
-    return true;
-  }
-  return false;
+  db.posts = db.posts.filter(p =>
+    p.id !== targetId &&
+    p.slug !== targetSlug &&
+    p.id !== id &&
+    p.slug !== id
+  );
+  writeDb(db);
+  lastSupabaseFetchTime = Date.now();
+
+  deletePostFromSupabase(targetId, targetSlug).catch(err => console.warn('Supabase delete warning:', err.message));
+  return db.posts.length !== initialLength;
 }
 
 export async function incrementPostViewsAsync(slug, clientIp = 'unknown') {
@@ -670,22 +757,42 @@ export async function syncWithSupabase() {
     if (!isReady) return false;
 
     const remote = await getPostsFromSupabase();
+    const db = readDb();
+    if (!Array.isArray(db.deletedPosts)) db.deletedPosts = [];
+    const deletedSet = new Set(db.deletedPosts.map(x => String(x).toLowerCase()));
+
     if (remote && Array.isArray(remote) && remote.length > 0) {
-      const db = readDb();
+      const validRemote = remote.filter(p =>
+        !deletedSet.has(String(p.id).toLowerCase()) && !deletedSet.has(String(p.slug).toLowerCase())
+      );
       const map = new Map();
-      db.posts.forEach(p => map.set(p.slug, p));
-      remote.forEach(p => map.set(p.slug, { ...map.get(p.slug), ...p }));
+      validRemote.forEach(p => map.set(p.slug || p.id, p));
+
+      // Keep only newly created local posts (<5 min) that aren't synced yet
+      db.posts.forEach(p => {
+        const key = p.slug || p.id;
+        const isDeleted = deletedSet.has(String(p.id).toLowerCase()) || deletedSet.has(String(p.slug).toLowerCase());
+        if (!isDeleted && !map.has(key)) {
+          const age = Date.now() - new Date(p.createdAt || p.isoDate || 0).getTime();
+          if (age < 5 * 60 * 1000) {
+            map.set(key, p);
+          }
+        }
+      });
+
       db.posts = Array.from(map.values());
       writeDb(db);
-      console.log(`⚡ Synced ${remote.length} articles from Supabase!`);
+      console.log(`⚡ Synced ${db.posts.length} authoritative articles from Supabase!`);
       return true;
     } else if (remote && remote.length === 0) {
       console.log('⚡ Supabase posts table is empty, auto-seeding default articles...');
-      const db = readDb();
-      for (const p of db.posts) {
+      const nonDeleted = db.posts.filter(p =>
+        !deletedSet.has(String(p.id).toLowerCase()) && !deletedSet.has(String(p.slug).toLowerCase())
+      );
+      for (const p of nonDeleted) {
         await upsertPostInSupabase(p);
       }
-      console.log(`⚡ Seeded ${db.posts.length} articles into Supabase!`);
+      console.log(`⚡ Seeded ${nonDeleted.length} articles into Supabase!`);
       return true;
     }
   } catch (err) {

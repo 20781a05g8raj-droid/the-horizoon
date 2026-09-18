@@ -133,16 +133,20 @@ export async function upsertPostInSupabase(post) {
 }
 
 /**
- * Delete post from Supabase
+ * Delete post from Supabase (by ID and/or slug)
  */
-export async function deletePostFromSupabase(id) {
+export async function deletePostFromSupabase(id, slug) {
   try {
-    const { error } = await supabase.from('posts').delete().eq('id', String(id));
-    if (error) {
-      console.warn('Supabase delete error:', error.message);
-      return false;
+    let deleted = false;
+    if (id) {
+      const { error } = await supabase.from('posts').delete().eq('id', String(id));
+      if (!error) deleted = true;
     }
-    return true;
+    if (slug) {
+      const { error } = await supabase.from('posts').delete().eq('slug', String(slug));
+      if (!error) deleted = true;
+    }
+    return deleted;
   } catch (err) {
     console.warn('Supabase delete exception:', err.message);
     return false;

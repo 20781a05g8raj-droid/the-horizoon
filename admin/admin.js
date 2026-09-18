@@ -104,6 +104,25 @@ function compressImageFile(file, maxWidth = 1200, quality = 0.82) {
 // Local / Standalone Storage Store (Works offline & without external backend)
 // ==========================================================================
 const FALLBACK_KEY = 'horizoon_local_posts';
+const DELETED_POSTS_KEY = 'horizoon_deleted_posts_ids';
+
+function getDeletedPostTombstones() {
+  try {
+    const raw = localStorage.getItem(DELETED_POSTS_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function addDeletedPostTombstone(id, slug) {
+  try {
+    const list = getDeletedPostTombstones();
+    if (id && !list.includes(String(id))) list.push(String(id));
+    if (slug && !list.includes(String(slug))) list.push(String(slug));
+    localStorage.setItem(DELETED_POSTS_KEY, JSON.stringify(list));
+  } catch (e) {}
+}
 
 // Immediately purge any legacy mock views in browser's local cache
 (function purgeLegacyViews() {
@@ -129,6 +148,7 @@ const FALLBACK_KEY = 'horizoon_local_posts';
 
 function getLocalStoredPosts() {
   const local = localStorage.getItem(FALLBACK_KEY);
+  const tombstones = new Set(getDeletedPostTombstones().map(x => String(x).toLowerCase()));
   if (local) {
     try {
       const parsed = JSON.parse(local);
@@ -136,7 +156,10 @@ function getLocalStoredPosts() {
         parsed.forEach(p => {
           if (typeof p.views !== 'number' || isNaN(p.views)) p.views = 0;
         });
-        return parsed;
+        return parsed.filter(p =>
+          !tombstones.has(String(p.id || '').toLowerCase()) &&
+          !tombstones.has(String(p.slug || '').toLowerCase())
+        );
       }
     } catch (e) {}
   }
@@ -728,7 +751,7 @@ function renderArticlesTable(posts) {
             <a href="/post/${p.slug}" target="_blank" class="btn-icon" title="View Public Page">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
             </a>
-            <button class="btn-icon btn-icon-delete" title="Delete Article" onclick="deletePostConfirm('${p.id}', '${escapeQuote(p.title)}')">
+            <button class="btn-icon btn-icon-delete" title="Delete Article" onclick="deletePostConfirm('${p.id}', '${escapeQuote(p.title)}', '${p.slug}')">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
             </button>
           </div>
@@ -782,32 +805,48 @@ if (searchInput) searchInput.addEventListener('input', applyArticleFilters);
 if (catFilter) catFilter.addEventListener('change', applyArticleFilters);
 if (sortFilter) sortFilter.addEventListener('change', applyArticleFilters);
 
-window.deletePostConfirm = async function (id, title) {
+window.deletePostConfirm = async function (id, title, slug) {
   if (!confirm(`Are you sure you want to permanently delete article:\n"${title}"?`)) {
     return;
   }
 
+  showAdminToast('Deleting article...', 'info');
+
+  // 1. Immediately record in client tombstones
+  addDeletedPostTombstone(id, slug);
+
+  // 2. Remove from local store & memory immediately
+  const targetId = String(id).toLowerCase();
+  const targetSlug = slug ? String(slug).toLowerCase() : targetId;
+  const filterOut = p => {
+    const pid = String(p.id || '').toLowerCase();
+    const pslug = String(p.slug || '').toLowerCase();
+    return pid !== targetId && pslug !== targetId && pid !== targetSlug && pslug !== targetSlug;
+  };
+
+  const local = getLocalStoredPosts().filter(filterOut);
+  saveLocalStoredPosts(local);
+  currentPosts = (currentPosts || []).filter(filterOut);
+  renderArticlesTable(currentPosts);
+
+  // 3. Send DELETE request to backend and await response
   try {
-    const res = await fetch(`${API_BASE}/api/posts/${id}`, {
+    const res = await fetch(`${API_BASE}/api/posts/${encodeURIComponent(id)}`, {
       method: 'DELETE',
       headers: { 'Authorization': `Bearer ${authToken}` }
     });
-    if (res.ok) {
-      const data = await res.json();
-      if (data.success) {
-        // success
-      }
+    if (!res.ok && slug && slug !== id) {
+      await fetch(`${API_BASE}/api/posts/${encodeURIComponent(slug)}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${authToken}` }
+      });
     }
   } catch (e) {
-    console.warn('Backend delete unavailable, updating local store:', e);
+    console.warn('Backend delete error:', e);
   }
 
-  // Sync / remove from local store
-  const local = getLocalStoredPosts().filter(p => String(p.id) !== String(id));
-  saveLocalStoredPosts(local);
-
   showAdminToast('Article deleted successfully.', 'success');
-  loadAllArticles();
+  await loadAllArticles();
   loadDashboardData();
 };
 
