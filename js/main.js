@@ -5,6 +5,54 @@
 
 import { ARTICLES, CATEGORIES, SITE_CONFIG } from './data.js';
 
+let allSearchableArticles = [...ARTICLES];
+
+export async function loadPublishedArticles() {
+  try {
+    const res = await fetch('/api/posts?status=published');
+    if (res.ok) {
+      const data = await res.json();
+      if (data.success && Array.isArray(data.posts) && data.posts.length > 0) {
+        allSearchableArticles = data.posts;
+        renderHomepageLatestArticles(data.posts);
+        updateSavedUI();
+        return data.posts;
+      }
+    }
+  } catch (e) {}
+
+  try {
+    const local = JSON.parse(localStorage.getItem('horizoon_local_posts') || '[]');
+    const published = local.filter(p => p.status === 'published');
+    if (published.length > 0) {
+      allSearchableArticles = published;
+      renderHomepageLatestArticles(published);
+      updateSavedUI();
+      return published;
+    }
+  } catch (e) {}
+
+  renderHomepageLatestArticles(ARTICLES);
+  return ARTICLES;
+}
+
+function renderHomepageLatestArticles(posts) {
+  const grid = document.getElementById('homepage-latest-grid');
+  if (!grid || !Array.isArray(posts) || posts.length === 0) return;
+
+  const latestFour = posts.slice(0, 4);
+  grid.innerHTML = latestFour.map(post => `
+    <a href="post.html?slug=${post.slug}" class="latest-card">
+      <div class="latest-thumb-wrap">
+        <img src="${post.image}" alt="${post.imageAlt || post.title}" loading="lazy" onerror="this.src='assets/images/featured-mindfulness.jpg'">
+      </div>
+      <span class="latest-category">${post.category || 'LIFESTYLE'}</span>
+      <h3 class="latest-title">${post.title}</h3>
+      <span class="latest-date">${post.date || 'Recent'}</span>
+    </a>
+  `).join('');
+}
+
 // ==========================================================================
 // 1. Toast Notification Helper
 // ==========================================================================
@@ -108,7 +156,7 @@ function renderSavedDrawerContent() {
     return;
   }
 
-  const savedArticles = ARTICLES.filter(a => savedSlugs.includes(a.slug));
+  const savedArticles = allSearchableArticles.filter(a => savedSlugs.includes(a.slug));
   container.innerHTML = savedArticles.map(article => `
     <div class="saved-item-card">
       <img src="${article.image}" alt="${article.title}" class="saved-item-thumb">
@@ -195,11 +243,11 @@ function setupSearchModal() {
     }
 
     const q = query.toLowerCase();
-    const matches = ARTICLES.filter(post => 
-      post.title.toLowerCase().includes(q) ||
-      post.summary.toLowerCase().includes(q) ||
-      post.category.toLowerCase().includes(q) ||
-      post.tags.some(t => t.toLowerCase().includes(q))
+    const matches = allSearchableArticles.filter(post => 
+      (post.title || '').toLowerCase().includes(q) ||
+      (post.summary || '').toLowerCase().includes(q) ||
+      (post.category || '').toLowerCase().includes(q) ||
+      (post.tags || []).some(t => t.toLowerCase().includes(q))
     );
 
     if (matches.length === 0) {
@@ -340,5 +388,6 @@ if (typeof document !== 'undefined') {
     setupMobileNav();
     setupNewsletterForms();
     updateSavedUI();
+    loadPublishedArticles();
   });
 }

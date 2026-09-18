@@ -239,35 +239,73 @@ export async function authenticateAdmin({ email, password, ip = '127.0.0.1' }) {
   };
 }
 
+const SESSION_SECRET = process.env.SESSION_SECRET || process.env.ADMIN_PASSWORD || 'thehorizoon-secure-session-salt-2026';
+
+function signToken(email, expiresAt) {
+  const data = `${email}:${expiresAt}`;
+  const sig = crypto.createHmac('sha256', SESSION_SECRET).update(data).digest('hex');
+  return Buffer.from(JSON.stringify({ email, expiresAt, sig })).toString('base64url');
+}
+
+function verifySignedToken(token) {
+  try {
+    const raw = Buffer.from(token, 'base64url').toString('utf-8');
+    const parsed = JSON.parse(raw);
+    if (!parsed || !parsed.email || !parsed.expiresAt || !parsed.sig) return null;
+    if (Date.now() > parsed.expiresAt) return null;
+
+    const data = `${parsed.email}:${parsed.expiresAt}`;
+    const expectedSig = crypto.createHmac('sha256', SESSION_SECRET).update(data).digest('hex');
+    const bufA = Buffer.from(parsed.sig);
+    const bufB = Buffer.from(expectedSig);
+    if (bufA.length !== bufB.length || !crypto.timingSafeEqual(bufA, bufB)) {
+      return null;
+    }
+    return { token, email: parsed.email, createdAt: parsed.expiresAt - SESSION_LIFETIME_MS, expiresAt: parsed.expiresAt };
+  } catch (e) {
+    return null;
+  }
+}
+
 /**
- * Creates a cryptographically random session token
+ * Creates a cryptographically signed session token
  */
 export function createSession(email) {
-  const token = crypto.randomBytes(32).toString('hex');
   const now = Date.now();
+  const expiresAt = now + SESSION_LIFETIME_MS;
+  const token = signToken(email, expiresAt);
   const session = {
     token,
     email,
     createdAt: now,
-    expiresAt: now + SESSION_LIFETIME_MS
+    expiresAt: expiresAt
   };
   activeSessions.set(token, session);
   return session;
 }
 
 /**
- * Validates a Bearer token
+ * Validates a Bearer token (supports both in-memory cache and signed HMAC verification across restarts)
  */
 export function validateSession(token) {
   if (!token) return null;
   const session = activeSessions.get(token);
-  if (!session) return null;
-
-  if (Date.now() > session.expiresAt) {
-    activeSessions.delete(token);
-    return null;
+  if (session) {
+    if (Date.now() > session.expiresAt) {
+      activeSessions.delete(token);
+      return null;
+    }
+    return session;
   }
-  return session;
+
+  // Verify HMAC signed token (persists across server restarts and serverless lambdas)
+  const verified = verifySignedToken(token);
+  if (verified) {
+    activeSessions.set(token, verified);
+    return verified;
+  }
+
+  return null;
 }
 
 /**

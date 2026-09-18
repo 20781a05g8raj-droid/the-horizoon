@@ -16,19 +16,24 @@ export async function initBlogPage() {
   const grid = document.getElementById('blog-posts-grid');
   if (!grid) return;
 
-  // Try fetching dynamic posts from API
+  let loadedFromApi = false;
+
+  // 1. Try fetching dynamic posts from API
   try {
     const res = await fetch('/api/posts?status=published');
-    const data = await res.json();
-    if (data.success && data.posts && data.posts.length > 0) {
-      activeArticles = data.posts;
+    if (res.ok) {
+      const data = await res.json();
+      if (data.success && Array.isArray(data.posts) && data.posts.length > 0) {
+        activeArticles = data.posts;
+        loadedFromApi = true;
+      }
     }
   } catch (e) {
     console.warn('API unavailable, checking local store:', e);
   }
 
-  // Fallback to localStorage if available
-  if (activeArticles === ARTICLES || activeArticles.length === 0) {
+  // 2. Fallback to localStorage if API was unavailable
+  if (!loadedFromApi) {
     try {
       const local = JSON.parse(localStorage.getItem('horizoon_local_posts') || '[]');
       const published = local.filter(p => p.status === 'published');
@@ -37,8 +42,12 @@ export async function initBlogPage() {
           if (typeof p.views !== 'number' || isNaN(p.views)) p.views = 0;
         });
         activeArticles = published;
+      } else {
+        activeArticles = [...ARTICLES];
       }
-    } catch (e) {}
+    } catch (e) {
+      activeArticles = [...ARTICLES];
+    }
   }
 
   // Check URL params for category or search

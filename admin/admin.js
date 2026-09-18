@@ -854,6 +854,7 @@ window.startNewArticle = function () {
   document.getElementById('edit-post-id').value = '';
   document.getElementById('editor-heading').textContent = 'Create New Article';
   document.getElementById('btn-save-text').textContent = 'Publish Post';
+  document.getElementById('post-status-select').value = 'published';
   document.getElementById('featured-image-preview').src = '../assets/images/featured-mindfulness.jpg';
   document.getElementById('post-image-url').value = 'assets/images/featured-mindfulness.jpg';
   document.getElementById('post-image-alt').value = '';
@@ -963,12 +964,46 @@ if (fileUploadInput) {
     if (!file) return;
 
     if (uploadStatusText) {
-      uploadStatusText.textContent = 'Optimizing & preparing image for database...';
+      uploadStatusText.textContent = 'Uploading image to server...';
       uploadStatusText.style.color = 'var(--adm-primary)';
     }
 
+    // 1. If authenticated, try real file upload to /api/upload
+    if (authToken) {
+      try {
+        const formData = new FormData();
+        formData.append('image', file);
+        const upRes = await fetch(`${API_BASE}/api/upload`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${authToken}` },
+          body: formData
+        });
+        if (upRes.ok) {
+          const upData = await upRes.json();
+          if (upData.success && upData.url) {
+            document.getElementById('post-image-url').value = upData.url;
+            const featuredImgPreview = document.getElementById('featured-image-preview');
+            if (featuredImgPreview) {
+              featuredImgPreview.src = resolveAdminImageUrl(upData.url);
+            }
+            if (uploadStatusText) {
+              uploadStatusText.textContent = '✓ Uploaded to server!';
+              uploadStatusText.style.color = 'var(--adm-success)';
+            }
+            showAdminToast('Image uploaded successfully!', 'success');
+            const altField = document.getElementById('post-image-alt');
+            if (altField && !altField.value.trim()) altField.focus();
+            updateSeoLivePreview();
+            return;
+          }
+        }
+      } catch (uploadErr) {
+        console.warn('Server upload failed, using client compression:', uploadErr);
+      }
+    }
+
+    // 2. Client-side canvas compression fallback
     try {
-      // 1. Compress image client-side to ensure crisp, lightweight Base64 stored directly in Database
       const dataUrl = await compressImageFile(file, 1200, 0.82);
       document.getElementById('post-image-url').value = dataUrl;
       const featuredImgPreview = document.getElementById('featured-image-preview');
@@ -979,7 +1014,7 @@ if (fileUploadInput) {
         uploadStatusText.textContent = '✓ Saved in post data!';
         uploadStatusText.style.color = 'var(--adm-success)';
       }
-      showAdminToast('Image optimized & ready for database storage!', 'success');
+      showAdminToast('Image ready for database storage!', 'success');
 
       const altField = document.getElementById('post-image-alt');
       if (altField && !altField.value.trim()) {
@@ -992,7 +1027,7 @@ if (fileUploadInput) {
       console.warn('Canvas compression fallback to FileReader:', err);
     }
 
-    // Local DataURL fallback
+    // 3. Local DataURL fallback
     const reader = new FileReader();
     reader.onload = (ev) => {
       const dataUrl = ev.target.result;
@@ -1571,9 +1606,17 @@ if (postEditorForm) {
     };
 
     const saveBtn = document.getElementById('btn-save-post');
-    saveBtn.disabled = true;
+    const draftBtn = document.getElementById('btn-save-draft');
+    if (saveBtn) saveBtn.disabled = true;
+    if (draftBtn) draftBtn.disabled = true;
 
     try {
+      if (!authToken) {
+        showAdminToast('You must be logged in as admin to publish or save articles.', 'error');
+        showLoginScreen();
+        return;
+      }
+
       let res;
       if (editingPostId) {
         res = await fetch(`${API_BASE}/api/posts/${editingPostId}`, {
@@ -1598,51 +1641,76 @@ if (postEditorForm) {
       if (res && res.ok) {
         const data = await res.json();
         if (data.success && data.post) {
-          showAdminToast(editingPostId ? 'Article updated & stored in Supabase!' : 'Article published & stored in Supabase!', 'success');
+          const isLive = data.post.status === 'published';
+          showAdminToast(
+            isLive
+              ? (editingPostId ? 'Article updated & published live!' : 'Article published live & stored in database!')
+              : 'Saved privately as draft.',
+            'success'
+          );
           editingPostId = null;
+
+          // Also keep local storage cache updated
+          const localPosts = getLocalStoredPosts();
+          const existingIdx = localPosts.findIndex(p => String(p.id) === String(data.post.id) || p.slug === data.post.slug);
+          if (existingIdx !== -1) {
+            localPosts[existingIdx] = data.post;
+          } else {
+            localPosts.unshift(data.post);
+          }
+          saveLocalStoredPosts(localPosts);
+
           await loadAllArticles();
           await loadDashboardData();
           switchTab('articles');
           return;
         }
-      } else if (res) {
+      }
+
+      // If server returned an error (e.g. 400, 401, 500)
+      if (res) {
         const errData = await res.json().catch(() => ({}));
-        showAdminToast(errData.message || 'Error saving to database.', 'error');
+        if (res.status === 401) {
+          showAdminToast('Admin session expired. Please sign in again.', 'error');
+          showLoginScreen();
+          return;
+        }
+        showAdminToast(errData.message || `Server error (${res.status}): Could not save article.`, 'error');
+        return;
       }
     } catch (err) {
-      console.warn('Backend save unavailable, updating local store:', err);
+      console.error('Backend save error:', err);
+      showAdminToast('Could not reach backend server. Please verify the server is running.', 'error');
+      return;
     } finally {
-      saveBtn.disabled = false;
+      if (saveBtn) saveBtn.disabled = false;
+      if (draftBtn) draftBtn.disabled = false;
     }
+  });
+}
 
-    // Offline / Local store fallback
-    const localPosts = getLocalStoredPosts();
-    if (editingPostId) {
-      const idx = localPosts.findIndex(p => String(p.id) === String(editingPostId));
-      if (idx !== -1) {
-        localPosts[idx] = { ...localPosts[idx], ...payload, updatedAt: new Date().toISOString() };
+// Bind explicit "Save Draft" and "Publish Post" buttons
+const btnSaveDraft = document.getElementById('btn-save-draft');
+if (btnSaveDraft) {
+  btnSaveDraft.addEventListener('click', () => {
+    const statusSelect = document.getElementById('post-status-select');
+    if (statusSelect) statusSelect.value = 'draft';
+    const form = document.getElementById('post-editor-form');
+    if (form) {
+      if (typeof form.requestSubmit === 'function') {
+        form.requestSubmit();
+      } else {
+        form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
       }
-    } else {
-      const words = payload.content.replace(/<[^>]*>/g, '').trim().split(/\s+/).filter(Boolean).length;
-      const readMinutes = Math.max(1, Math.round(words / 200));
-      const newPost = {
-        id: `post-${Date.now()}`,
-        ...payload,
-        wordsCount: words,
-        readTime: `${readMinutes} min read`,
-        views: 0,
-        createdAt: new Date().toISOString(),
-        date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-      };
-      localPosts.unshift(newPost);
     }
-    saveLocalStoredPosts(localPosts);
+  });
+}
 
-    showAdminToast(editingPostId ? 'Article updated successfully!' : 'Article published successfully!', 'success');
-    editingPostId = null;
-    loadAllArticles();
-    loadDashboardData();
-    switchTab('articles');
+const btnSavePost = document.getElementById('btn-save-post');
+if (btnSavePost) {
+  btnSavePost.addEventListener('click', () => {
+    const statusSelect = document.getElementById('post-status-select');
+    if (statusSelect) statusSelect.value = 'published';
   });
 }
 
